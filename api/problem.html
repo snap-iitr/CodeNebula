@@ -1,0 +1,53 @@
+<!DOCTYPE html><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<link href="/cses.css?0" id="styles" rel="stylesheet" type="text/css"/>
+<link href="/cses-dark.css?0" id="styles-dark" rel="stylesheet alternate" type="text/css"/>
+<meta content="white" id="theme-color" name="theme-color"/>
+<script id="darkmode-enabled" type="application/json">false</script>
+<script src="/ui.js"></script>
+<link href="/lib/fontawesome/css/all.min.css" rel="stylesheet" type="text/css"/>
+</head><div class="content">
+<title>CSES - Permutation Prime Sums</title><link href="/lib/katex/katex.min.css" rel="stylesheet"/>
+<script defer="" src="/lib/katex/katex.min.js"></script>
+<script defer="" src="/lib/katex/contrib/copy-tex.min.js"></script>
+<script defer="" src="/lib/google-code-prettify/run_prettify.js"></script>
+<script>
+addEventListener("DOMContentLoaded", function (e) {
+    const mathElements = document.getElementsByClassName("math");
+    const macros = {};
+    for (let element of mathElements) {
+        katex.render(element.textContent, element, {
+            displayMode: element.classList.contains("math-display"),
+            throwOnError: false,
+            globalGroup: true,
+            macros,
+        });
+    }
+});
+</script>
+<ul class="task-constraints">
+<li><b>Time limit:</b> 1.00 s</li>
+<li><b>Memory limit:</b> 512 MB</li>
+</ul>
+<input name="course" type="hidden" value="problemset"/>
+<input name="task" type="hidden" value="3423"/>
+<div class="md"><p>Given <span class="math math-inline">n</span>, create two permutations <span class="math math-inline">a</span> and <span class="math math-inline">b</span> of size <span class="math math-inline">n</span> such that <span class="math math-inline">a_i+b_i</span> is prime for <span class="math math-inline">i=1,2,\dots,n</span>.</p>
+<h1 id="input">Input</h1>
+<p>The only line has an integer <span class="math math-inline">n</span>.</p>
+<h1 id="output">Output</h1>
+<p>Print two permutations. You can print any valid solution. If there are no solutions, print <code>IMPOSSIBLE</code>.</p>
+<h1 id="constraints">Constraints</h1>
+<ul>
+<li><span class="math math-inline">1 \le n \le 10^5</span></li>
+</ul>
+<h1 id="example">Example</h1>
+<p>Input:</p>
+<pre>5
+</pre>
+<p>Output:</p>
+<pre>2 1 3 5 4
+5 1 4 2 3  
+</pre>
+<p><em>Explanation</em>: The sums are <span class="math math-inline">2+5=7</span>, <span class="math math-inline">1+1=2</span>, <span class="math math-inline">3+4=7</span>, <span class="math math-inline">5+2=7</span> and <span class="math math-inline">4+3=7</span> which all are primes.</p>
+</div> </div></html>

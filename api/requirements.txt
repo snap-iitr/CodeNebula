@@ -1,0 +1,7 @@
+Flask
+bs4
+dotenv
+flask-cors
+requests
+seleniumbase
+webdriver-manager==4.0.0
