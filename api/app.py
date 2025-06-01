@@ -9,6 +9,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 
 # Configs and constants
@@ -70,7 +72,6 @@ def get_random_problem():
     return get_random_problem()
 
 def login_cses(driver):
-    print("Logging")
     driver.get(CSES_LOGIN_URL)
     time.sleep(3)
     username_input = driver.find_element(By.NAME, "nick")
@@ -80,10 +81,8 @@ def login_cses(driver):
     password_input.send_keys(CSES_PASSWORD)
     password_input.send_keys(Keys.RETURN)
     time.sleep(3)  # Wait for login
-    print("Logged")
 
 def submit_code_cses(driver, problem_id, language_id):
-    print("Submiting")
     submit_url = CSES_SUBMIT_URL_TEMPLATE.format(problem_id=problem_id)
     driver.get(submit_url)
     time.sleep(3)
@@ -102,7 +101,6 @@ def submit_code_cses(driver, problem_id, language_id):
 
     code_area = driver.find_element(By.CSS_SELECTOR, "input[type='file']")
     # CSES uses a textarea for code input
-    code_area.clear()
     code_area.send_keys(CODE_PATH)
     time.sleep(3)
     # Submit button
@@ -158,22 +156,22 @@ def run():
 def submit():
     problem_id = request.args.get('problem', default='3357')  # default example problem id
     language = request.args.get('language', default="C++", type=int)  # language id for CSES
-    chrome_options = Options()
+    chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--screenshot")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-software-rasterizer")
-    chrome_options.add_argument("--disable-background-networking")
-    chrome_options.add_argument("--enable-logging")
-    chrome_options.add_argument("--v=1")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-sync")
-    chrome_options.add_argument("--mute-audio")
-    chrome_options.add_argument("--window-size=1280,720")
+    # chrome_options.add_argument("--disable-software-rasterizer")
+    # chrome_options.add_argument("--disable-background-networking")
+    # chrome_options.add_argument("--enable-logging")
+    # chrome_options.add_argument("--v=1")
+    # chrome_options.add_argument("--disable-extensions")
+    # chrome_options.add_argument("--disable-sync")
+    # chrome_options.add_argument("--mute-audio")
+    # chrome_options.add_argument("--window-size=1280,720")
+    # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
     driver = webdriver.Chrome(options=chrome_options)
-    try:
+    try:    
         login_cses(driver)
         result = submit_code_cses(driver, problem_id, language)
     except Exception as e:

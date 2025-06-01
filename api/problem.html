@@ -8,7 +8,7 @@
 <script src="/ui.js"></script>
 <link href="/lib/fontawesome/css/all.min.css" rel="stylesheet" type="text/css"/>
 </head><div class="content">
-<title>CSES - Permutation Prime Sums</title><link href="/lib/katex/katex.min.css" rel="stylesheet"/>
+<title>CSES - Minimizing Coins</title><link href="/lib/katex/katex.min.css" rel="stylesheet"/>
 <script defer="" src="/lib/katex/katex.min.js"></script>
 <script defer="" src="/lib/katex/contrib/copy-tex.min.js"></script>
 <script defer="" src="/lib/google-code-prettify/run_prettify.js"></script>
@@ -31,23 +31,25 @@ addEventListener("DOMContentLoaded", function (e) {
 <li><b>Memory limit:</b> 512 MB</li>
 </ul>
 <input name="course" type="hidden" value="problemset"/>
-<input name="task" type="hidden" value="3423"/>
-<div class="md"><p>Given <span class="math math-inline">n</span>, create two permutations <span class="math math-inline">a</span> and <span class="math math-inline">b</span> of size <span class="math math-inline">n</span> such that <span class="math math-inline">a_i+b_i</span> is prime for <span class="math math-inline">i=1,2,\dots,n</span>.</p>
+<input name="task" type="hidden" value="1634"/>
+<div class="md"><p>Consider a money system consisting of <span class="math math-inline">n</span> coins. Each coin has a positive integer value. Your task is to produce a sum of money <span class="math math-inline">x</span> using the available coins in such a way that the number of coins is minimal.</p>
+<p>For example, if the coins are <span class="math math-inline">\{1,5,7\}</span> and the desired sum is <span class="math math-inline">11</span>, an optimal solution is <span class="math math-inline">5+5+1</span> which requires <span class="math math-inline">3</span> coins.</p>
 <h1 id="input">Input</h1>
-<p>The only line has an integer <span class="math math-inline">n</span>.</p>
+<p>The first input line has two integers <span class="math math-inline">n</span> and <span class="math math-inline">x</span>: the number of coins and the desired sum of money.</p>
+<p>The second line has <span class="math math-inline">n</span> distinct integers <span class="math math-inline">c_1,c_2,\dots,c_n</span>: the value of each coin.</p>
 <h1 id="output">Output</h1>
-<p>Print two permutations. You can print any valid solution. If there are no solutions, print <code>IMPOSSIBLE</code>.</p>
+<p>Print one integer: the minimum number of coins. If it is not possible to produce the desired sum, print <span class="math math-inline">-1</span>.</p>
 <h1 id="constraints">Constraints</h1>
 <ul>
-<li><span class="math math-inline">1 \le n \le 10^5</span></li>
+<li><span class="math math-inline">1 \le n \le 100</span></li>
+<li><span class="math math-inline">1 \le x \le 10^6</span></li>
+<li><span class="math math-inline">1 \le c_i \le 10^6</span></li>
 </ul>
 <h1 id="example">Example</h1>
 <p>Input:</p>
-<pre>5
+<pre>3 11
+1 5 7
 </pre>
 <p>Output:</p>
-<pre>2 1 3 5 4
-5 1 4 2 3  
-</pre>
-<p><em>Explanation</em>: The sums are <span class="math math-inline">2+5=7</span>, <span class="math math-inline">1+1=2</span>, <span class="math math-inline">3+4=7</span>, <span class="math math-inline">5+2=7</span> and <span class="math math-inline">4+3=7</span> which all are primes.</p>
-</div> </div></html>
+<pre>3
+</pre></div> </div></html>
