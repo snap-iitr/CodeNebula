@@ -13,20 +13,19 @@ passport.use(new GoogleStrategy({
 
 async (req, accessToken, refreshToken, profile, done) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM users WHERE google_id = ?', [profile.id]);
+    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [profile.emails[0].value]);
 
     if (rows.length > 0) {
       const user = rows[0];
       return done(null, user);
     } else {
       const [result] = await pool.query(
-        'INSERT INTO users (google_id, name, email, address) VALUES (?, ?, ?, ?)',
-        [profile.id, profile.displayName, profile.emails[0].value,null]
+        'INSERT INTO users (username, email, wallet_address) VALUES (?, ?, ?)',
+        [profile.displayName, profile.emails[0].value,null]
       );
       const user = {
         id: result.insertId,
-        google_id: profile.id,
-        display_name: profile.displayName,
+        username: profile.displayName,
         email: profile.emails[0].value
       };
       return done(null, user);
@@ -37,12 +36,12 @@ async (req, accessToken, refreshToken, profile, done) => {
 }));
 
 passport.serializeUser((user, done) => {
-  done(null, user.google_id);
+  done(null, user.email);
 });
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM users WHERE google_id = ?', [id]);
+    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [id]);
     done(null, rows[0]);
   } catch (err) {
     done(err, null);

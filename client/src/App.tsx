@@ -1,8 +1,9 @@
 import { Routes, Route } from 'react-router-dom';
-import Home from './Home';
-import Landing from './Landing';
-import AuthWrapper from './AuthWrapper';
-import Setjwt from './Setjwt';
+import Home from './pages/Home';
+import Landing from './pages/Landing';
+import AuthWrapper from './utils/AuthWrapper';
+import Setjwt from './utils/Setjwt';
+import Disconnect from './utils/Disconnect';
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
         <Route path="/connect-more" element={<Landing status={1} />} />
         <Route path="/home" element={<AuthWrapper><Home /></AuthWrapper>} />
         <Route path="/setjwt" element={<Setjwt />} />
+        <Route path="/disconnect" element={<Disconnect />} />
       </Routes>
   );
 }

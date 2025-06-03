@@ -18,13 +18,8 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('jwt');
-    if (!token) {
-      navigate('/');
-      return;
-    }
 
-    axios.post<VerifyTokenResponse>('http://localhost:3000/verify-token', { token })
+    axios.post<VerifyTokenResponse>('http://localhost:3000/verify-token', {}, { withCredentials: true })
       .then(res => {
         const { status } = res.data;
         console.log(status);

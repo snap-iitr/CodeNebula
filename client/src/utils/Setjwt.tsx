@@ -8,7 +8,7 @@ const SetJWT: React.FC = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
     if (token) {
-      localStorage.setItem('jwt', token);
+      document.cookie = `jwt=${token}`;
       // Remove token param from URL (optional)
       window.history.replaceState({}, document.title, window.location.pathname);
     }

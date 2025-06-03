@@ -1,0 +1,53 @@
+import type React from "react"
+import { Zap, Users, Trophy } from "lucide-react"
+
+const Hero: React.FC = () => {
+  return (
+    <section className="relative py-20 px-4">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-green-600/20 rounded-3xl blur-3xl animate-pulse"></div>
+
+      <div className="relative z-10 text-center max-w-4xl mx-auto">
+        <div className="mb-6">
+          <span className="inline-block px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-full text-sm font-medium mb-4 font-cyber tracking-wide">
+            WELCOME BACK TO THE ARENA, CRYPTOGAMER!
+          </span>
+        </div>
+
+        <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 bg-clip-text text-transparent font-cyber tracking-wider">
+          READY TO BATTLE?
+        </h1>
+
+        <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto">
+          Stake ETH, challenge opponents, and prove your skills in the ultimate blockchain gaming arena.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+          <button className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-xl blur opacity-0 group-hover:opacity-75 transition-opacity duration-300"></div>
+            <div className="relative flex items-center space-x-2">
+              <Zap size={24} />
+              <span>Start New Game</span>
+            </div>
+          </button>
+
+          <button className="group relative px-8 py-4 bg-gray-800/50 border border-purple-500/30 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 hover:border-purple-400/50 hover:bg-gray-700/50">
+            <div className="flex items-center space-x-2">
+              <Users size={24} />
+              <span>Challenge a Friend</span>
+            </div>
+          </button>
+
+          <button className="group relative px-8 py-4 bg-gray-800/50 border border-green-500/30 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 hover:border-green-400/50 hover:bg-gray-700/50">
+            <div className="flex items-center space-x-2">
+              <Trophy size={24} />
+              <span>View Leaderboard</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export default Hero
