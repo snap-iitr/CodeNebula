@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { Zap, Shield, Gamepad2 } from "lucide-react"
 
 interface IndexProps {
@@ -14,8 +15,7 @@ declare global {
 
 const Landing: React.FC<IndexProps> = ({ status = 0 }) => {
   const [isConnecting, setIsConnecting] = useState(false);
-  // Simulating navigation for demo purposes
-  const navigate = (path: string) => console.log(`Navigating to: ${path}`);
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log("called");

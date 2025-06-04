@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 
 interface AuthWrapperProps {
   children: ReactNode;
+  type: number;
 }
 
 interface VerifyTokenResponse {
@@ -12,18 +13,23 @@ interface VerifyTokenResponse {
   user?: any;
 }
 
-const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
+const AuthWrapper: React.FC<AuthWrapperProps> = ({ children,type }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isVerified, setIsVerified] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
 
-    axios.post<VerifyTokenResponse>('http://localhost:3000/verify-token', {}, { withCredentials: true })
+    axios.post<VerifyTokenResponse>('http://localhost:3000/verify-token', { type }, { withCredentials: true })
       .then(res => {
         const { status } = res.data;
         console.log(status);
-        if (status == 2) {
+        if(type === 2) {
+          if (status == 1) {
+            setIsVerified(true);
+          } else navigate('/home');
+        }
+        else if (status == 2) {
           setIsVerified(true);
         } else if (status == 1) {
           navigate('/connect-more');

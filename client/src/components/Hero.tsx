@@ -1,7 +1,51 @@
 import type React from "react"
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { BrowserProvider, parseEther } from 'ethers';
 import { Zap, Users, Trophy } from "lucide-react"
 
 const Hero: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleStart = async () => {
+    try{
+      if (!window.ethereum) {
+        alert("MetaMask is not installed!");
+        return;
+      }
+      // Create a new ethers provider and signer
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      const tx = await signer.sendTransaction({
+        to: import.meta.env.VITE_ADMIN_WALLET_ADDRESS,
+        value: parseEther("0.001"),
+      });
+
+      console.log("Transaction sent:", tx.hash);
+
+      await tx.wait(); // Wait for confirmation
+
+      await axios.post<string>(
+        'http://localhost:3000/set-gaming',
+        { txHash: tx.hash },
+        { withCredentials: true }
+      ).then(res =>{
+        console.log("Gaming session started:", res.data);
+        const new_token  = res.data;
+        document.cookie = `jwt=${new_token}`;
+      })
+      .catch(() => {
+        navigate('/home');
+      });
+
+      navigate('/loading');
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      alert(`Payment failed: ${error.message || error}`);
+    }
+  };
+
   return (
     <section className="relative py-20 px-4">
       {/* Animated gradient background */}
@@ -23,7 +67,7 @@ const Hero: React.FC = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-          <button className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25">
+          <button onClick={handleStart} className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-xl blur opacity-0 group-hover:opacity-75 transition-opacity duration-300"></div>
             <div className="relative flex items-center space-x-2">
               <Zap size={24} />
