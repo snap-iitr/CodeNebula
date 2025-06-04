@@ -8,9 +8,6 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 import time
 
 # Configs and constants
@@ -32,20 +29,15 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-def put_problem_to_html(url):
+def get_problem_to_html(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
-    content_head = soup.find('head')
-    if content_head.find('img'):
-        return 0
     content_div = soup.find('div', class_='content')
-    content = "<!DOCTYPE html>" + str(content_head) + str(content_div) + "</html>"
-    with open(HTML_PATH, 'w', encoding='utf-8') as f:
-        f.write(content)
-    return 1;
+    if content_div.find('img'):
+        return get_problem_to_html(url)
+    return str(content_div).replace('h1', 'h3')
 
 def get_random_problem():
-    print("random_problem")
     # Scrape CSES problemset page to get all problems and their points
     response = requests.get(CSES_PROBLEMS_URL)
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -65,11 +57,10 @@ def get_random_problem():
     problem = {
         'id': problem_id,
         'name': problem_name,
-        'url': problem_url
+        'url': problem_url,
+        'html': get_problem_to_html(problem_url)
     }
-    if(put_problem_to_html(problem_url)):
-        return problem
-    return get_random_problem()
+    return problem
 
 def login_cses(driver):
     driver.get(CSES_LOGIN_URL)
@@ -114,12 +105,13 @@ def submit_code_cses(driver, problem_id, language_id):
 
 @app.route('/random_problem', methods=['GET'])
 def random_problem():
-    print("random-problem")
+    print("Fetching a random problem...")
     problem = get_random_problem()
     return jsonify({
         'id': problem['id'],
         'name': problem['name'],
-        'url': problem['url']
+        'url': problem['url'],
+        'html': problem['html']
     })
 
 @app.route('/run', methods=['GET'])
