@@ -19,6 +19,7 @@ const Loading: React.FC = () => {
   const token = getCookie('jwt');
   if (!token) return null;
   const decoded: JwtPayload = jwtDecode(token);
+  const Email = decoded.email;
   const WalletAddress = decoded.wallet_address;
   const Username = decoded.username;
   const navigate = useNavigate();
@@ -33,10 +34,10 @@ const Loading: React.FC = () => {
 
     const handleConnect = () => {
       console.log("Connected to the server");
-      socket.emit('join_game', { walletAddress: WalletAddress, username: Username });
+      socket.emit('join_game', { walletAddress: WalletAddress, username: Username, email: Email });
     };
 
-    const handleGameStart = (data: { opponent: string; roomID: string; html: string }) => {
+    const handleGameStart = (data: { opponent: string; roomID: string; html: string; opponentWalletAddress : string; problemID : string }) => {
       console.log("Game started with html:", data.html);
       navigate('/game', {
         state: {
@@ -44,7 +45,9 @@ const Loading: React.FC = () => {
           username: Username,
           walletAddress: WalletAddress,
           roomID: data.roomID,
-          html: data.html
+          html: data.html,
+          opponentWalletAddress: data.opponentWalletAddress, // Assuming opponent is the wallet address
+          problemID: data.problemID,
         },
       });
     };

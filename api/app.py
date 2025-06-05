@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+import tempfile
 import time
 
 # Configs and constants
@@ -73,7 +74,7 @@ def login_cses(driver):
     password_input.send_keys(Keys.RETURN)
     time.sleep(3)  # Wait for login
 
-def submit_code_cses(driver, problem_id, language_id):
+def submit_code_cses(driver, problem_id, language_id, code, language_extension):
     submit_url = CSES_SUBMIT_URL_TEMPLATE.format(problem_id=problem_id)
     driver.get(submit_url)
     time.sleep(3)
@@ -85,23 +86,29 @@ def submit_code_cses(driver, problem_id, language_id):
             option.click()
             break
         
-    time.sleep(3)
-    # Load code content
-    # with open(CODE_PATH, 'r') as f:
-    #     code_content = f.read()
+    time.sleep(1)
+
+    # Write code to a temp file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=language_extension, mode='w') as temp_file:
+        temp_file.write(code)
+        temp_file_path = temp_file.name
 
     code_area = driver.find_element(By.CSS_SELECTOR, "input[type='file']")
     # CSES uses a textarea for code input
-    code_area.send_keys(CODE_PATH)
-    time.sleep(3)
+    code_area.send_keys(temp_file_path)
+    time.sleep(2)
     # Submit button
     submit_button = driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
     submit_button.click()
     time.sleep(5)  # Wait for submission
     summary_table = driver.find_element(By.CLASS_NAME, "summary-table")
-    verdict_element = summary_table.find_element(By.CLASS_NAME, "inline-score")
-    verdict_text = verdict_element.text.strip()
-    return verdict_text
+    verdict_status = driver.find_element(By.ID,"status").text.strip()
+    print(verdict_status)
+    if(verdict_status == "READY"):
+        verdict_element = summary_table.find_element(By.CLASS_NAME, "inline-score")
+        verdict_text = verdict_element.text.strip()
+        return verdict_text
+    return verdict_status
 
 @app.route('/random_problem', methods=['GET'])
 def random_problem():
@@ -114,18 +121,17 @@ def random_problem():
         'html': problem['html']
     })
 
-@app.route('/run', methods=['GET'])
+@app.route('/run', methods=['POST'])
 def run():
-    language = request.args.get('language', default=7, type=int)  # Adapt to language IDs you want
-    input_data = request.args.get('input', default='')
-    url = "https://code-compiler.p.rapidapi.com/v2"
-
-    with open(CODE_PATH, 'r') as file:
-        content = file.read()
+    data = request.get_json()
+    language = data.get('languageCode', 17)  # default to 17 if not provided
+    input_data = data.get('input', '')
+    code = data.get('code', '')
+    url = "https://code-compiler.p.rapidapi.com/v2" # https://rapidapi.com/abdheshnayak/api/code-compiler
 
     payload = {
         "LanguageChoice": language,
-        "Program": content,
+        "Program": code,
         "Input": input_data
     }
     headers = {
@@ -137,17 +143,21 @@ def run():
     response = requests.post(url, json=payload, headers=headers)
     if response.status_code == 200:
         result = response.json()
+        print(result["Result"])
         if result["Errors"]:
-            return result["Errors"]
+            return str(result["Result"])
         else:
-            return result["Result"]
+            return str(result["Result"])
     else:
-        return f"Error: {response.status_code}, {response.text}"
+        return str(f"Error: {response.status_code}, {response.text}")
 
-@app.route('/submit', methods=['GET'])
+@app.route('/submit', methods=['POST'])
 def submit():
-    problem_id = request.args.get('problem', default='3357')  # default example problem id
-    language = request.args.get('language', default="C++", type=int)  # language id for CSES
+    data = request.get_json()
+    problem_id = data.get('problemID', '3357')  # default example problem id
+    language = data.get('selectedLanguage', "C++")  # language id for CSES
+    code = data.get('code')
+    language_extension = data.get('languageExtension','.cpp')
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-gpu")
@@ -165,14 +175,14 @@ def submit():
     driver = webdriver.Chrome(options=chrome_options)
     try:    
         login_cses(driver)
-        result = submit_code_cses(driver, problem_id, language)
+        result = submit_code_cses(driver, problem_id, language, code, language_extension)
     except Exception as e:
         print(f"An error occurred: {e}")
         return f"Error: {str(e)}", 500
     finally:
         driver.quit()
 
-    return f"Successfully submitted the code for problem {problem_id}: {result}"
+    return str(result)
 
 if __name__ == '__main__':
     app.run(port=8000, debug=True)

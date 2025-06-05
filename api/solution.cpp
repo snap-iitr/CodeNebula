@@ -4,4 +4,5 @@ int main(){
     long long int n;
     cin>>n;
     cout << n << "\n";
+    cout << 2*n << "\n";
 }

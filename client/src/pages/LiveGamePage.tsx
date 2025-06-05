@@ -1,26 +1,11 @@
-import React, { useEffect , useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useSocket } from '../utils/SocketContext'
+"use client"
+
+import type React from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Play, Send, Trophy } from "lucide-react"
 import CodeEditor from "../components/CodeEditor" //other options like monaco-editor can be used here
 import PlayerCard from "../components/PlayerCard"
-
-type LocationState = {
-  opponent: string;
-  username: string;
-  walletAddress: string;
-  roomID: string;
-  html: string;
-  opponentWalletAddress: string;
-  problemID: string;
-};
-
-declare global {
-  interface Window {
-    renderMath?: () => void;
-  }
-}
 
 interface Player {
   username: string
@@ -28,121 +13,26 @@ interface Player {
   walletAddress: string
 }
 
-const MainGame: React.FC = () => {
-
-  const { socket } = useSocket();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [state, setstate] = useState<LocationState>();
+const LiveGamePage: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState(900) // 15 minutes
-  const [selectedLanguage, setSelectedLanguage] = useState("C++")
+  const [selectedLanguage, setSelectedLanguage] = useState("javascript")
   const [code, setCode] = useState("")
   const [input, setInput] = useState("")
   const [output, setOutput] = useState("")
-  const [started, setStarted] = useState(true);
   const [isRunning, setIsRunning] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
   const currentUser: Player = {
-    username: state ? state.username : "CryptoGamer",
+    username: "CryptoGamer",
     avatar: "🎮",
-    walletAddress: state ? state.walletAddress : "0xAb...89Ef",
+    walletAddress: "0xAb...89Ef",
   }
 
   const opponent: Player = {
-    username: state ? state.opponent : "CodeNinja",
+    username: "CodeNinja",
     avatar: "🥷",
-    walletAddress: state ? state.opponentWalletAddress : "0x...opponentAddress",
+    walletAddress: "0xDe...F8G2",
   }
-
-  
-  useEffect(() =>{
-    if(location.state) setstate(location.state);
-    else navigate('/home');
-  },[location.state, navigate]);
-
-  // useEffect(() => {
-  //   const handleKeydown = async () => {
-  //     await document.documentElement.requestFullscreen();
-  //     setStarted(true);
-  //     window.removeEventListener("keydown", handleKeydown);
-  //   };
-  //   window.addEventListener("keydown", handleKeydown);
-  //   return () => {
-  //     window.removeEventListener("keydown", handleKeydown);
-  //   };
-  // }, []);
-
-  // useEffect(() => {
-  //   const onFullScreenChange = () => {
-  //     const isFullscreen = document.fullscreenElement !== null;
-  //     if (!isFullscreen) {
-  //       alert("You exited fullscreen! Please stay in fullscreen mode.");
-  //     }
-  //   };
-
-  //   document.addEventListener("fullscreenchange", onFullScreenChange);
-
-  //   return () => {
-  //     document.removeEventListener("fullscreenchange", onFullScreenChange);
-  //   };
-  // }, []);
-
-  // useEffect(() => {
-  //   const handleVisibilityChange = () => {
-  //     if (document.hidden) {
-  //       alert("You switched tabs or minimized the window.");
-  //     }
-  //   };
-
-  //   document.addEventListener("visibilitychange", handleVisibilityChange);
-  //   return () => {
-  //     document.removeEventListener("visibilitychange", handleVisibilityChange);
-  //   };
-  // }, []);
-
-
-  // Socket events
-  useEffect(() => {
-    if(!state) return;
-    if (!socket || !state.roomID) return;
-
-    // Join the room explicitly
-    if (socket.connected) {
-      socket.emit('joined_room', { roomID: state.roomID });
-    }
-    else navigate('/home');
-
-    socket.on('submitted', () => {
-      socket.disconnect();
-      alert("🚀 Solution submitted successfully!! You will be navigated to home now")
-      setOutput("🚀 Solution submitted successfully!! You will be navigated to home now")
-      setTimeout(() => {
-        navigate('/home');
-      }
-      , 3000);
-    });
-
-    const onGameTied = () => {
-      socket.disconnect();
-      alert("⏱ Time’s up! Game tied.")
-      setOutput("⏱ Time’s up! Game tied.")
-      setTimeout(() => {
-        navigate('/home');
-      }
-      , 3000);
-    };
-    
-    socket.on('game_tied', onGameTied);
-
-    return () => {
-      socket.off('submitted');
-      socket.off('game_tied', onGameTied);
-    };
-  }, [socket, state]);
-  // Socket events end
-
-
 
   // Timer countdown
   useEffect(() => {
@@ -165,69 +55,37 @@ const MainGame: React.FC = () => {
   }
 
   const handleRunCode = async () => {
-    if(!socket) return;
     setIsRunning(true)
     // Simulate API call
-    const selectedLang = languages.find(lang => lang.value === selectedLanguage);
-    const languageCode = selectedLang?.code;
-    socket.emit('run_code', { languageCode, code, input });
-    socket.on('code_output', (data : string) => {
-      setOutput(data);
-      setIsRunning(false);
-    });
+    setTimeout(() => {
+      setOutput(`All test cases passed!`)
+      setIsRunning(false)
+    }, 2000)
   }
 
   const handleSubmit = () => {
-    if(!socket) return;
     setIsSubmitted(true)
-    setOutput("🚀 Solution submitted successfully!! You will be navigated to home now")
-    const selectedLang = languages.find(lang => lang.value === selectedLanguage);
-    const languageExtension = selectedLang?.extension;
-    let problemID = state?.problemID;
-    let roomID = state?.roomID;
-    let WalletAddress = currentUser.walletAddress;
-    let OpponentWalletAddress = opponent.walletAddress;
-    socket.emit('submit_code', { roomID, selectedLanguage, problemID, code, languageExtension, WalletAddress, OpponentWalletAddress });
+    setOutput("🚀 Solution submitted successfully! Waiting for opponent...")
   }
 
   const languages = [
-    { value: "Python3", label: "Python", icon: "🐍", code: 5, extension: ".py" },          // Python snake
-    { value: "C++", label: "C++", icon: "➕➕", code: 7, extension: ".cpp" },              // Plus signs for C++
-    { value: "C", label: "C", icon: "🅲", code: 6, extension: ".c" },                     // Letter C in circle
-    { value: "Java", label: "Java", icon: "☕️", code: 4, extension: ".java" },            // Coffee cup
-    { value: "Ruby", label: "Ruby", icon: "💎", code: 12, extension: ".rb" },             // Gemstone
-    { value: "Rust", label: "Rust", icon: "🦀", code: 46, extension: ".rs" },             // Crab
-    { value: "javascript", label: "JavaScript", icon: "⚡", code: 17, extension: ".js" }, // Yellow square for JS
-    { value: "php", label: "PHP", icon: "🐘", code: 8, extension: ".php" },               // Elephant
-    { value: "swift", label: "Swift", icon: "🦅", code: 37, extension: ".swift" },        // Eagle (Swift bird)
-    { value: "go", label: "Go", icon: "🐹", code: 20, extension: ".go" },                 // Gopher
-    { value: "typescript", label: "TypeScript", icon: "🔷", code: 60, extension: ".ts" },// Blue diamond
-    { value: "kotlin", label: "Kotlin", icon: "🅺", code: 43, extension: ".kt" },         // Letter K in circle
-  ];
-
-  const styledHtml = `
-  <html>
-    <head>
-      <style>
-        body {
-          color: white;
-          // background-color: #1a1a1a;
-          margin: 0;
-          padding: 1rem;
-          font-family: mono;
-        }
-      </style>
-    </head>
-    <body>
-      <pre className="whitespace-pre-wrap">---Problem Desciption Started---</pre>
-      ${state?.html || ''}
-      <pre className="whitespace-pre-wrap">---Problem Desciption Ended---</pre>
-    </body>
-  </html>
-`;
+  { value: "javascript", label: "JavaScript", icon: "⚡" },   // Yellow square for JS
+  { value: "python", label: "Python", icon: "🐍" },          // Python snake
+  { value: "cpp", label: "C++", icon: "➕➕" },              // Plus signs for C++
+  { value: "c", label: "C", icon: "🅲" },                     // Letter C in circle
+  { value: "java", label: "Java", icon: "☕️" },               // Coffee cup
+  { value: "ruby", label: "Ruby", icon: "💎" },               // Gemstone
+  { value: "php", label: "PHP", icon: "🐘" },                 // Elephant
+  { value: "swift", label: "Swift", icon: "🦅" },             // Eagle (Swift bird)
+  { value: "go", label: "Go", icon: "🐹" },                   // Gopher
+  { value: "typescript", label: "TypeScript", icon: "🔷" },   // Blue diamond
+  { value: "kotlin", label: "Kotlin", icon: "🅺" },            // Letter K in circle
+  { value: "rust", label: "Rust", icon: "🦀" },               // Crab
+  { value: "sql", label: "SQL", icon: "🗄️" },                 // File cabinet
+];
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white overflow-hidden ${!started ? "blur-md pointer-events-none" : ""}`}>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white overflow-hidden">
       {/* Animated background */}
       <div className="fixed inset-0 opacity-10">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.3)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.3)_1px,transparent_1px)] bg-[size:50px_50px] animate-pulse" />
@@ -304,16 +162,12 @@ const MainGame: React.FC = () => {
             {/* Desktop Layout */}
             <div className="hidden md:flex md:flex-row h-full">
               {/* Left Column - Problem (40%) */}
-              <div className="w-[40%] flex flex-col p-4 h-full">
-                <div className="bg-gray-800/50 backdrop-blur-sm border border-blue-500/30 rounded-2xl p-6 flex-1 h-full">
+              <div className="w-[40%] flex flex-col p-4">
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-blue-500/30 rounded-2xl p-6 flex-1">
                   <h2 className="text-2xl font-bold mb-4 text-blue-400 font-cyber tracking-wide">Problem Statement:</h2>
-                  <div className="bg-gray-900/50 rounded-lg p-4 font-mono text-sm text-gray-300 overflow-auto max-h-[calc(85vh)]">
-                    <iframe
-                      title="Game Frame"
-                      srcDoc={styledHtml}
-                      style={{ width: '100%', height: '100vh', border: 'none'}}
-                      sandbox="allow-scripts allow-same-origin"
-                    />
+                  <div className="bg-gray-900/50 rounded-lg p-4 font-mono text-sm text-gray-300 overflow-auto max-h-96">
+                    Problem Desciption
+                    {/* <pre className="whitespace-pre-wrap">Problem Desciption</pre> */}
                   </div>
                 </div>
               </div>
@@ -360,11 +214,11 @@ const MainGame: React.FC = () => {
                   <div className="bg-gray-800/50 backdrop-blur-sm border border-cyan-500/30 rounded-xl p-3">
                     <label className="block text-xs font-medium text-gray-300 mb-2">Output</label>
                     <div className="w-full h-20 bg-black border border-gray-600 rounded-lg px-2 py-2 text-white font-mono text-xs overflow-auto">
-                      {isRunning ? (<div className="text-gray-500 text-xs">Running...</div>) : (<>{output ? (
+                      {output ? (
                         <pre className="text-xs text-gray-300 whitespace-pre-wrap">{output}</pre>
                       ) : (
                         <div className="text-gray-500 text-xs">Output will appear here...</div>
-                      )}</>)}
+                      )}
                     </div>
                   </div>
                 </div>
@@ -403,7 +257,7 @@ const MainGame: React.FC = () => {
         </main>
       </div>
     </div>
-  );
+  )
 }
 
-export default MainGame;
+export default LiveGamePage

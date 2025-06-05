@@ -1,5 +1,5 @@
 const express = require('express');
-const { formatEther } = require("ethers");
+const { ethers, formatEther } = require("ethers");
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
@@ -8,7 +8,6 @@ const pool = require('./db');
 const cors = require('cors');
 const axios = require("axios");
 const PORT = process.env.PORT || 3000;
-const { createGame, submitSolution } = require('./gameManager');
 require('./google')
 const app = express();
 app.use(express.json());
@@ -45,51 +44,81 @@ const io = new Server(server, {
 var waitingPlayer = null;
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+async function Transaction(wallet_address, amount){
+  console.log(`Transaction initiated for ${wallet_address} with Amount: ${amount}`);
+
+  // Load Alchemy RPC URL and your private key
+  const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_ALCHEMY_API_URL);
+  const wallet = new ethers.Wallet(process.env.ADMIN_WALLET_PRIVATE_KEY, provider);
+  try {
+      const tx = await wallet.sendTransaction({
+          to: wallet_address, // Recipient's wallet address
+          value: ethers.parseEther(amount), // 0.01 ETH, etc.
+      });
+
+      await tx.wait(); // Optional: wait for mining
+      console.log(`Transaction successful with hash: ${tx.hash}`);
+  } catch (err) {
+      console.error(err);
+  }
+}
+
 // Handle player connections
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
+
+  function timer(roomID, wallet_address, opponentWalletAddress){
+    setTimeout(() => {
+      io.to(roomID).emit('game_tied');
+      Transaction(wallet_address.toString(),"0.0009");
+      Transaction(opponentWalletAddress.toString(),"0.0009");
+      console.log(`⏱ Game in ${roomID} tied (time up)`);
+    }, (15 * 60 * 1000) + 3000);
+  }
   
-  socket.on('join_game', async ({ walletAddress, username }) => {
+  socket.on('join_game', async ({ walletAddress, username, email }) => {
     console.log(`Player ${username} (${walletAddress}) wants to join a game.`);
 
     if (waitingPlayer) {
       await delay(3000);
       const opponentSocket = waitingPlayer.socket;
       const opponentUsername = waitingPlayer.username;
+      const opponentWalletAddress = waitingPlayer.walletAddress;
+      const opponentEmail = waitingPlayer.email;
       const [result] = await pool.query('SELECT max(id) AS maxId from games');
-      console.log(`Max game ID: ${result[0].maxId}`);
       const roomID = result[0].maxId + 1;
+      const [ID] = await pool.query('SELECT id FROM users WHERE email = ?',[email]);
+      const [opponentID] = await pool.query('SELECT id FROM users WHERE email = ?',[opponentEmail]);
+      const [result4] = await pool.query(
+              'INSERT INTO games (player1_id, player2_id, winner_id,stake_amount) VALUES (?, ?, ?, ?)',
+              [ID[0].id, opponentID[0].id,0,0.001]
+            );
       waitingPlayer = null;
 
-      // Join both sockets to the same room
-      socket.join(roomID);
-      opponentSocket.join(roomID);
-
       // Fetch a CP question from external API
-      let questionHtml = '';
       const res = await axios.get('http://localhost:8000/random_problem');
-      console.log(res.data);
-      questionHtml = res.data;
-
-      // Start the game
-      createGame(roomID, socket.id, opponentSocket.id, io);
-      console.log(questionHtml.html);
 
       io.to(socket.id).emit('game_start', {
         roomID,
-        html: questionHtml.html,
-        opponent: opponentUsername
+        html: res.data.html,
+        opponent: opponentUsername,
+        opponentWalletAddress: opponentWalletAddress,
+        problemID: res.id
       });
 
       io.to(opponentSocket.id).emit('game_start', {
         roomID,
-        html: questionHtml.html,
-        opponent: username
+        html: res.data.html,
+        opponent: username,
+        opponentWalletAddress: walletAddress,
+        problemID: res.id
       });
+
+      timer(roomID,walletAddress,opponentWalletAddress);
 
       console.log(`Game started in ${roomID}`);
     } else {
-      waitingPlayer = {socket,username,walletAddress};
+      waitingPlayer = {socket,username,walletAddress,email};
       console.log('Waiting for second player...');
     }
   });
@@ -99,10 +128,48 @@ io.on('connection', (socket) => {
     console.log(`Socket ${socket.id} joined room ${roomID}`);
   });
 
+  socket.on('run_code', async ({ languageCode, code, input }) => {
+    try {
+      const res = await axios.post('http://localhost:8000/run', {
+        languageCode,
+        code,
+        input
+      });
+      io.to(socket.id).emit('code_output', res.data.toString());
+    } catch (err) {
+      console.error('Error running code:', err.message || err);
+    }
+  });
 
-  socket.on('submit_solution', async ({ roomID, fileData, username }) => {
-    console.log(`📤 Submission from ${username} in ${roomID}`);
-    await submitSolution(io, roomID, socket.id, fileData);
+
+  socket.on('submit_code', async ({ roomID, selectedLanguage, problemID, code, languageExtension, WalletAddress, OpponentWalletAddress }) => {
+    const [result] = await pool.query('SELECT * FROM games where id = ?',[roomID]);
+    const game = result[0];
+    
+    if (!game || game.winner_id) return;
+
+    try {
+      const res = await axios.post('http://localhost:8000/submit', {
+        selectedLanguage,
+        code,
+        problemID,
+        languageExtension
+      });
+      console.log(res.data);
+      if(res.data == "ACCEPTED"){
+        const [ID] = await pool.query('SELECT id FROM users WHERE wallet_address = ?',[WalletAddress]);
+        const [result] = await pool.query(
+          'UPDATE games SET winner_id = ? WHERE id = ?',
+          [ID[0].id, roomID]
+        );
+        Transaction(WalletAddress.toString(),"0.0018");
+      }
+      else Transaction(OpponentWalletAddress.toString(),"0.0011");
+
+      io.to(roomID).emit('submitted');
+    } catch (err) {
+      console.error('Error running code:', err.message || err);
+    }
   });
 
 

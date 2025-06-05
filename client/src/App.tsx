@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Landing from './pages/Landing';
 import Loading from './pages/Loading';
 import MainGame from './pages/MainGame';
+import LiveGamePage from './pages/LiveGamePage';
 import AuthWrapper from './utils/AuthWrapper';
 import Setjwt from './utils/Setjwt';
 import Disconnect from './utils/Disconnect';
@@ -16,6 +17,7 @@ function App() {
         <Route path="/home" element={<AuthWrapper type={1}><Home /></AuthWrapper>} />
         <Route path="/loading" element={<AuthWrapper type={2}><SocketProvider><Loading /></SocketProvider></AuthWrapper>} />
         <Route path="/game" element={<AuthWrapper type={2}><MainGame /></AuthWrapper>} />
+        <Route path="/livegame" element={<LiveGamePage />} />
         <Route path="/setjwt" element={<Setjwt />} />
         <Route path="/disconnect" element={<Disconnect />} />
       </Routes>

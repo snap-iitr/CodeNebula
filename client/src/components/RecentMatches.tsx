@@ -1,5 +1,5 @@
 import type React from "react"
-import { Trophy, X, Clock } from "lucide-react"
+import { Trophy, X, Clock, Equal} from "lucide-react"
 import { useEffect } from "react"
 import axios from 'axios';
 import { useState } from "react";
@@ -46,6 +46,8 @@ const RecentMatches: React.FC = () => {
             className={`p-6 bg-gray-800/50 backdrop-blur-sm border rounded-2xl transition-all duration-300 hover:scale-[1.02] ${
               match.winner_id === UserID
                 ? "border-green-500/30 hover:border-green-400/50"
+                : match.winner_id == 0
+                ? "border-blue-500/30 hover:border-blue-400/50"
                 : "border-red-500/30 hover:border-red-400/50"
             }`}
           >
@@ -53,10 +55,14 @@ const RecentMatches: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div
                   className={`p-3 rounded-xl ${
-                    match.winner_id === UserID ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+                    match.winner_id === UserID 
+                    ? "bg-green-500/20 text-green-400" 
+                    : match.winner_id == 0
+                    ? "bg-blue-500/20 text-blue-400"
+                    : "bg-red-500/20 text-red-400"
                   }`}
                 >
-                  {match.winner_id === UserID ? <Trophy size={24} /> : <X size={24} />}
+                  {match.winner_id === UserID ? <Trophy size={24} /> : match.winner_id == 0 ?  <Equal size={24} /> : <X size={24} />}
                 </div>
 
                 <div>
@@ -73,8 +79,8 @@ const RecentMatches: React.FC = () => {
                   <span className="text-gray-400">Stake: </span>
                   <span className="text-white">{match.stake_amount}</span>
                 </div>
-                <div className={`text-sm ${match.winner_id === UserID ? "text-green-400" : "text-red-400"}`}>
-                  {match.winner_id === UserID ? `Won: ${match.stake_amount}` : "Lost stake"}
+                <div className={`text-sm ${match.winner_id === UserID ? "text-green-400" : match.winner_id == 0 ?  "text-blue-400" : "text-red-400"}`}>
+                  {match.winner_id === UserID ? `Won: ${match.stake_amount}` : match.winner_id == 0 ? "Match Draw" : "Lost stake"}
                 </div>
               </div>
             </div>
