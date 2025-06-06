@@ -14,6 +14,7 @@ type LocationState = {
   html: string;
   opponentWalletAddress: string;
   problemID: string;
+  email: string;
 };
 
 declare global {
@@ -39,7 +40,7 @@ const MainGame: React.FC = () => {
   const [code, setCode] = useState("")
   const [input, setInput] = useState("")
   const [output, setOutput] = useState("")
-  const [started, setStarted] = useState(true);
+  const [started, setStarted] = useState(false);
   const [isRunning, setIsRunning] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
@@ -61,45 +62,45 @@ const MainGame: React.FC = () => {
     else navigate('/home');
   },[location.state, navigate]);
 
-  // useEffect(() => {
-  //   const handleKeydown = async () => {
-  //     await document.documentElement.requestFullscreen();
-  //     setStarted(true);
-  //     window.removeEventListener("keydown", handleKeydown);
-  //   };
-  //   window.addEventListener("keydown", handleKeydown);
-  //   return () => {
-  //     window.removeEventListener("keydown", handleKeydown);
-  //   };
-  // }, []);
+  useEffect(() => {
+    const handleKeydown = async () => {
+      await document.documentElement.requestFullscreen();
+      setStarted(true);
+      window.removeEventListener("keydown", handleKeydown);
+    };
+    window.addEventListener("keydown", handleKeydown);
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    };
+  }, []);
 
-  // useEffect(() => {
-  //   const onFullScreenChange = () => {
-  //     const isFullscreen = document.fullscreenElement !== null;
-  //     if (!isFullscreen) {
-  //       alert("You exited fullscreen! Please stay in fullscreen mode.");
-  //     }
-  //   };
+  useEffect(() => {
+    const onFullScreenChange = () => {
+      const isFullscreen = document.fullscreenElement !== null;
+      if (!isFullscreen) {
+        alert("You exited fullscreen! Please stay in fullscreen mode.");
+      }
+    };
 
-  //   document.addEventListener("fullscreenchange", onFullScreenChange);
+    document.addEventListener("fullscreenchange", onFullScreenChange);
 
-  //   return () => {
-  //     document.removeEventListener("fullscreenchange", onFullScreenChange);
-  //   };
-  // }, []);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullScreenChange);
+    };
+  }, []);
 
-  // useEffect(() => {
-  //   const handleVisibilityChange = () => {
-  //     if (document.hidden) {
-  //       alert("You switched tabs or minimized the window.");
-  //     }
-  //   };
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        alert("You switched tabs or minimized the window.");
+      }
+    };
 
-  //   document.addEventListener("visibilitychange", handleVisibilityChange);
-  //   return () => {
-  //     document.removeEventListener("visibilitychange", handleVisibilityChange);
-  //   };
-  // }, []);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
 
   // Socket events
@@ -109,7 +110,7 @@ const MainGame: React.FC = () => {
 
     // Join the room explicitly
     if (socket.connected) {
-      socket.emit('joined_room', { roomID: state.roomID });
+      socket.emit('joined_room', { roomID: state.roomID, email: state.email });
     }
     else navigate('/home');
 

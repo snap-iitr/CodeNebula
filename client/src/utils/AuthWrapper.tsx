@@ -23,8 +23,8 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children,type }) => {
     axios.post<VerifyTokenResponse>('http://localhost:3000/verify-token', { type }, { withCredentials: true })
       .then(res => {
         const { status } = res.data;
-        console.log(status);
-        if(type === 2) {
+        console.log(type,status);
+        if(type !== 1) {
           if (status == 1) {
             setIsVerified(true);
           } else navigate('/home');

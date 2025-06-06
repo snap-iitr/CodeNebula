@@ -38,7 +38,6 @@ const Loading: React.FC = () => {
     };
 
     const handleGameStart = (data: { opponent: string; roomID: string; html: string; opponentWalletAddress : string; problemID : string }) => {
-      console.log("Game started with html:", data.html);
       navigate('/game', {
         state: {
           opponent: data.opponent,
@@ -48,6 +47,7 @@ const Loading: React.FC = () => {
           html: data.html,
           opponentWalletAddress: data.opponentWalletAddress, // Assuming opponent is the wallet address
           problemID: data.problemID,
+          email: Email,
         },
       });
     };

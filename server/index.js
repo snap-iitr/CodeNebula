@@ -19,6 +19,9 @@ const ADMIN_WALLET_ADDRESS = process.env.ADMIN_WALLET_ADDRESS;
 const { Server } = require('socket.io');
 const http = require('http');
 const server = http.createServer(app);
+const loadingUsers = new Set(); // loading_userId
+const connectedUsers = new Map(); // connected_userId
+const txHashes = new Set(); // txHash
 
 app.use(cors({
     origin: 'http://localhost:5000',
@@ -97,6 +100,11 @@ io.on('connection', (socket) => {
 
       // Fetch a CP question from external API
       const res = await axios.get('http://localhost:8000/random_problem');
+      
+      loadingUsers.delete(email);
+      loadingUsers.delete(opponentEmail);
+      connectedUsers.set(email,roomID);
+      connectedUsers.set(opponentEmail,roomID);
 
       io.to(socket.id).emit('game_start', {
         roomID,
@@ -123,7 +131,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('joined_room', ({ roomID }) => {
+  socket.on('joined_room', ({ roomID, email }) => {
+    if(connectedUsers.get(email) && connectedUsers.get(email) !== roomID) return;
+    connectedUsers.delete(email);
     socket.join(roomID);
     console.log(`Socket ${socket.id} joined room ${roomID}`);
   });
@@ -144,15 +154,16 @@ io.on('connection', (socket) => {
 
   socket.on('submit_code', async ({ roomID, selectedLanguage, problemID, code, languageExtension, WalletAddress, OpponentWalletAddress }) => {
     const [result] = await pool.query('SELECT * FROM games where id = ?',[roomID]);
+    console.log(result[0]);
     const game = result[0];
     
     if (!game || game.winner_id) return;
 
     try {
       const res = await axios.post('http://localhost:8000/submit', {
+        problemID,
         selectedLanguage,
         code,
-        problemID,
         languageExtension
       });
       console.log(res.data);
@@ -200,7 +211,6 @@ app.get('/auth/google/callback',
           username : req.user.username,
           email : req.user.email,
           wallet_address : null,
-          gaming: false
         };
         // Successful authentication, generate JWT
         const token = jwt.sign(payload, process.env.JWT_SECRET);
@@ -209,10 +219,9 @@ app.get('/auth/google/callback',
     }
 );
 
-app.post('/verify-token', (req,res) => { // type-1 is basic, type-2 is gaming
+app.post('/verify-token', (req,res) => { // type-1 is basic, type-2 is loading, type-3 is gaming
   const { type } = req.body;
   const token = req.cookies.jwt;
-
   if (!token) {
     return res.status(400).json({ status: 0, error: 'No token provided' });
   }
@@ -221,8 +230,12 @@ app.post('/verify-token', (req,res) => { // type-1 is basic, type-2 is gaming
     if (err) {
       return res.status(401).json({ status: 0, error: 'Invalid token' });
     }
-    if(type == '2'){
-      if(decoded.gaming) res.json({ status: 1 });
+    if(type == '3'){
+      if(connectedUsers.has(decoded.email)) res.json({ status: 1 });
+      else res.json({ status: 0 });
+    }
+    else if(type == '2'){
+      if(loadingUsers.has(decoded.email)) res.json({ status: 1 });
       else res.json({ status: 0 });
     }
     else if(decoded.email && decoded.wallet_address) res.json({ status: 2 });
@@ -249,7 +262,6 @@ app.post('/auth/metamask', async (req, res) => {
           username : decoded.username,
           email : decoded.email,
           wallet_address : address,
-          gaming: false
         };
         // Successful authentication, generate JWT
         const new_token = jwt.sign(payload, process.env.JWT_SECRET);
@@ -259,11 +271,11 @@ app.post('/auth/metamask', async (req, res) => {
   });
 });
 
-app.post('/set-gaming', async (req, res) => {
+app.post('/set-loading', async (req, res) => {
   const { txHash } = req.body;
   console.log(txHash);
   const token = req.cookies.jwt;
-  if (!txHash || !token) return res.status(400).json({ error: 'Provide all things!!' });
+  if (!txHash || txHashes.has(txHash)) return res.status(400).json({ error: 'Provide all things!!' });
   
   try{
 
@@ -281,26 +293,20 @@ app.post('/set-gaming', async (req, res) => {
   
     const toAddress = tx.to?.toLowerCase();
     if (toAddress !== ADMIN_WALLET_ADDRESS.toLowerCase() || parseFloat(formatEther(tx.value)) < 0.001) return res.status(400).json({ error: 'Wrong Transaction' });
-
+    
     jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
         return res.status(401).json({ status: 0, error: 'Invalid token' });
       }
       if(decoded && decoded.email && decoded.wallet_address){
-        const payload = {
-            username : decoded.username,
-            email : decoded.email,
-            wallet_address : decoded.wallet_address,
-            gaming: true
-          };
-          // Successful authentication, generate JWT
-          const new_token = jwt.sign(payload, process.env.JWT_SECRET);
-          res.send(new_token);
+        loadingUsers.add(decoded.email);
+        txHashes.add(txHash);
       }
-      else res.status(400).json({ error: 'No user in token' });
     });
-  }
-  catch (err) {
+    console.log("Loading users: ",loadingUsers);
+    console.log("Transaction Hashes: ",txHashes);
+    res.status(200).json({ message: 'Loading started' });
+  } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
@@ -362,6 +368,9 @@ app.post('/data', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
+  console.log("Loading users: ",loadingUsers);
+  console.log("Connected users: ",connectedUsers);
+  console.log("Transaction Hashes: ",txHashes);
   res.send('Hello from Express!');
 });
 

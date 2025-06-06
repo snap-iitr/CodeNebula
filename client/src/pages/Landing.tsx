@@ -18,7 +18,6 @@ const Landing: React.FC<IndexProps> = ({ status = 0 }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("called");
     if (status === 2) {
       navigate('/home');
     }
@@ -47,13 +46,13 @@ const handleMetaMaskConnect = async () => {
     ).then(res =>{
       const new_token  = res.data;
       document.cookie = `jwt=${new_token}`;
+      console.log('Connected account:', address);
+      navigate('/home');
     })
     .catch(() => {
         navigate('/');
     })
 
-    console.log('Connected account:', address);
-    navigate('/home');
   } catch (error) {
     console.error('Error during MetaMask connect:', error);
     navigate('/');

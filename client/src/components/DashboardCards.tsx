@@ -26,10 +26,10 @@ const DashboardCards: React.FC =  () => {
   const [balance2, setBalance2] = useState<string>("Loading...");
   const [UserGames, setUserGames] = useState<Match[]>();
   const [UserID, setUserID] = useState<number>();
-  const [EthWon, setEthWon] = useState<number>();
-  const [EthLost, setEthLost] = useState<number>();
   const [TotalGames, setTotalGames] = useState<number>();
   const [WinRate, setWinRate] = useState<string>();
+  const [EthWon, setEthWon] = useState<number>();
+  const [EthLost, setEthLost] = useState<number>();
   const [LastGameResult, setLastGameResult] = useState<string>();
   const [LastGameAmount, setLastGameAmount] = useState<string>();
 
@@ -78,7 +78,7 @@ const DashboardCards: React.FC =  () => {
     setTotalGames(UserGames.length);
 
     const wins = UserGames.filter(match => match.winner_id === UserID);
-    const losses = UserGames.filter(match => match.winner_id !== UserID);
+    const losses = UserGames.filter(match => (match.winner_id !== UserID && match.winner_id !== 0));
     setWinRate(((wins.length / UserGames.length) * 100).toFixed(2));
 
     const totalEthWon = wins.reduce((sum, match) => sum + parseFloat(match.stake_amount), 0);
@@ -89,7 +89,7 @@ const DashboardCards: React.FC =  () => {
     const lastMatch = UserGames.sort(
       (a, b) => b.id - a.id
     )[0];
-    if(lastMatch) setLastGameResult(lastMatch.winner_id === UserID ? "Victory" : "Defeat");
+    if(lastMatch) setLastGameResult(lastMatch.winner_id === UserID ? "Victory" : lastMatch.winner_id === 0 ? "Tie" : "Defeat");
     else setLastGameResult("---");
     if(lastMatch) setLastGameAmount(lastMatch.stake_amount);
     else setLastGameAmount("---");
@@ -128,13 +128,13 @@ const DashboardCards: React.FC =  () => {
     {
       title: "Last Match",
       value: `${LastGameResult}`,
-      subtitle:  (LastGameResult == "Victory" ? "Won" : "Loss") + `: ${LastGameAmount} ETH`,
-      icon: (LastGameResult == "Victory" ? Trophy : X),
-      color: (LastGameResult == "Victory" ? "from-yellow-500 to-orange-500" : "from-red-800 to-red-400" ),
-      bgColor:  (LastGameResult == "Victory" ? "from-yellow-500/10 to-orange-500/10" : "from-red-800/10 to-red-400/10" ),
+      subtitle:  (LastGameResult == "Victory" ? `Won: ${LastGameAmount} ETH` : LastGameResult == "Tie" ? "Match Draw" : `Loss: ${LastGameAmount} ETH`),
+      icon: (LastGameResult == "Victory" ? Trophy : LastGameResult == "Tie" ? X : X),
+      color: (LastGameResult == "Victory" ? "from-yellow-500 to-orange-500" : LastGameResult == "Tie" ? "from-blue-500 to-cyan-500" : "from-red-800 to-red-400" ),
+      bgColor:  (LastGameResult == "Victory" ? "from-yellow-500/10 to-orange-500/10" : LastGameResult == "Tie" ? "from-blue-500/10 to-cyan-500/10" : "from-red-800/10 to-red-400/10" ),
       borderColor: "border-yellow-500/30",
     },
-  ]
+  ];
 
   return (
     <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

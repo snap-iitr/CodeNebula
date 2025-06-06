@@ -61,6 +61,7 @@ def get_random_problem():
         'url': problem_url,
         'html': get_problem_to_html(problem_url)
     }
+    print(f"Selected problem: {problem_name} (ID: {problem_id})")
     return problem
 
 def login_cses(driver):
@@ -75,6 +76,7 @@ def login_cses(driver):
     time.sleep(3)  # Wait for login
 
 def submit_code_cses(driver, problem_id, language_id, code, language_extension):
+    print(f"Submitting code for problem {problem_id} in language Extension {language_extension}...")
     submit_url = CSES_SUBMIT_URL_TEMPLATE.format(problem_id=problem_id)
     driver.get(submit_url)
     time.sleep(3)
@@ -156,22 +158,14 @@ def submit():
     data = request.get_json()
     problem_id = data.get('problemID', '3357')  # default example problem id
     language = data.get('selectedLanguage', "C++")  # language id for CSES
-    code = data.get('code')
+    code = data.get('code',' ')
     language_extension = data.get('languageExtension','.cpp')
+    print(f"Submitting code for problem {problem_id} in {language}...")
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    # chrome_options.add_argument("--disable-software-rasterizer")
-    # chrome_options.add_argument("--disable-background-networking")
-    # chrome_options.add_argument("--enable-logging")
-    # chrome_options.add_argument("--v=1")
-    # chrome_options.add_argument("--disable-extensions")
-    # chrome_options.add_argument("--disable-sync")
-    # chrome_options.add_argument("--mute-audio")
-    # chrome_options.add_argument("--window-size=1280,720")
-    # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
     driver = webdriver.Chrome(options=chrome_options)
     try:    
         login_cses(driver)

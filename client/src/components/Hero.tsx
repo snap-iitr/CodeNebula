@@ -27,19 +27,17 @@ const Hero: React.FC = () => {
       await tx.wait(); // Wait for confirmation
 
       await axios.post<string>(
-        'http://localhost:3000/set-gaming',
+        'http://localhost:3000/set-loading',
         { txHash: tx.hash },
         { withCredentials: true }
       ).then(res =>{
         console.log("Gaming session started:", res.data);
-        const new_token  = res.data;
-        document.cookie = `jwt=${new_token}`;
+        navigate('/loading');
       })
       .catch(() => {
         navigate('/home');
       });
 
-      navigate('/loading');
     } catch (error: any) {
       console.error("Payment error:", error);
       alert(`Payment failed: ${error.message || error}`);
