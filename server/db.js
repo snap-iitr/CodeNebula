@@ -29,3 +29,12 @@ module.exports = pool.promise();
 //     FOREIGN KEY (player1_id) REFERENCES users(id),
 //     FOREIGN KEY (player2_id) REFERENCES users(id)
 // );
+// CREATE TABLE friends (
+//     id INT AUTO_INCREMENT PRIMARY KEY,
+//     requester_id INT NOT NULL,
+//     addressee_id INT NOT NULL,
+//     status BOOLEAN DEFAULT FALSE,
+
+//     FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
+//     FOREIGN KEY (addressee_id) REFERENCES users(id) ON DELETE CASCADE
+// );

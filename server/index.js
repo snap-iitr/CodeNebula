@@ -367,6 +367,176 @@ app.post('/data', async (req, res) => {
   }
 });
 
+app.get('/get-friends', async (req, res) => {
+  let userdata;
+  const token = req.cookies.jwt;
+  if (!token) return res.status(400).json({ status: 0, error: 'No token provided' });
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ status: 0, error: 'Invalid token' });
+    }
+    userdata = decoded;
+  });
+
+  const user = await pool.query(
+    'SELECT id FROM users WHERE email = ?',
+    [userdata.email]
+  );
+  let [data]  = await pool.query(
+    `SELECT 
+      u.id AS id,
+      u.username,
+      u.wallet_address AS walletAddress,
+      '👑' AS avatar,
+
+      COUNT(g.id) AS gamesPlayed,
+      COUNT(CASE WHEN g.winner_id = u.id THEN 1 END) AS gamesWon
+
+    FROM friends f
+
+    JOIN users u ON u.id = 
+      CASE 
+        WHEN f.requester_id = ? THEN f.addressee_id
+        WHEN f.addressee_id = ? THEN f.requester_id
+      END
+
+    LEFT JOIN games g ON (g.player1_id = u.id OR g.player2_id = u.id)
+
+    WHERE f.status = TRUE
+      AND (? IN (f.requester_id, f.addressee_id))
+
+    GROUP BY u.id, u.username, u.wallet_address;`,
+    [user[0][0].id,user[0][0].id,user[0][0].id]
+  );
+  let [data2]  = await pool.query(
+    `SELECT 
+      u.id AS id,
+      u.username,
+      u.wallet_address AS walletAddress,
+      '👑' AS avatar
+    FROM friends f
+    JOIN users u ON u.id = f.requester_id
+    WHERE f.addressee_id = ?
+      AND f.status = FALSE;`,
+    [user[0][0].id] 
+  );
+  res.json({
+    "Friends" : data,
+    "FriendsRequests" : data2
+  });
+});
+
+app.post('/search-friends', async (req, res) => {
+  let userdata;
+  const { searchQuery } = req.body;
+  const token = req.cookies.jwt;
+  if (!token) return res.status(400).json({ status: 0, error: 'No token provided' });
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ status: 0, error: 'Invalid token' });
+    }
+    userdata = decoded;
+  });
+
+  const user = await pool.query(
+    'SELECT id FROM users WHERE email = ?',
+    [userdata.email]
+  );
+  let [data]  = await pool.query(
+    `SELECT
+      u.id AS id,
+      u.username AS username,
+      u.wallet_address AS walletAddress,
+      '👑' AS avatar
+    FROM users u
+    WHERE u.id != ?
+      AND (
+        u.username LIKE CONCAT('%', ? , '%')
+        OR u.wallet_address LIKE CONCAT('%', ? , '%')
+        OR u.email LIKE CONCAT('%', ? , '%')
+      )
+      AND u.id NOT IN (
+        SELECT
+          CASE
+            WHEN f.requester_id = ? THEN f.addressee_id
+            ELSE f.requester_id
+          END
+        FROM friends f
+        WHERE (f.requester_id = ? OR f.addressee_id = ?)
+      );`,
+    [user[0][0].id,searchQuery,searchQuery,searchQuery,user[0][0].id,user[0][0].id,user[0][0].id]
+  );
+  res.json(data);
+});
+
+app.post('/request-friend', async (req, res) => {
+  let userdata;
+  const { requestId , value } = req.body;
+  const token = req.cookies.jwt;
+  if (!token) return res.status(400).json({ status: 0, error: 'No token provided' });
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ status: 0, error: 'Invalid token' });
+    }
+    userdata = decoded;
+  });
+
+  const user = await pool.query(
+    'SELECT id FROM users WHERE email = ?',
+    [userdata.email]
+  );
+
+  if(value){
+    await pool.query(
+      'UPDATE friends SET status = TRUE WHERE requester_id = ? AND addressee_id = ?',
+      [requestId, user[0][0].id]
+    );
+  }
+  else {
+    await pool.query(
+      'DELETE FROM friends WHERE requester_id = ? AND addressee_id = ?',
+      [requestId, user[0][0].id]
+    );
+  }
+  res.send("Done!");
+});
+
+app.post('/add-friend', async (req, res) => {
+  let userdata;
+  const { FriendId } = req.body;
+  const token = req.cookies.jwt;
+  if (!token) return res.status(400).json({ status: 0, error: 'No token provided' });
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ status: 0, error: 'Invalid token' });
+    }
+    userdata = decoded;
+  });
+
+  const user = await pool.query(
+    'SELECT id FROM users WHERE email = ?',
+    [userdata.email]
+  );
+
+  const [result] = await pool.query(
+    'SELECT * FROM friends WHERE requester_id = ? AND addressee_id = ?',
+    [FriendId,user[0][0].id]
+  );
+  if(result.length > 0){
+    await pool.query(
+      'UPDATE friends SET status = TRUE WHERE requester_id = ? AND addressee_id = ?',
+      [FriendId, user[0][0].id]
+    );
+  }
+  else {
+    await pool.query(
+      'INSERT INTO friends (requester_id, addressee_id, status) VALUES (?, ?, FALSE)',
+      [user[0][0].id, FriendId]
+    );
+  }
+  res.send("Done!");
+});
+
 app.get('/', (req, res) => {
   console.log("Loading users: ",loadingUsers);
   console.log("Connected users: ",connectedUsers);

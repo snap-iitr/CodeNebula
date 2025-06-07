@@ -45,9 +45,9 @@ const Navbar: React.FC = () => {
             <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">
               Profile
             </a>
-            <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">
+            <Link to="/friends" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">
               Friends
-            </a>
+            </Link>
             <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">
               Leaderboard
             </a>
