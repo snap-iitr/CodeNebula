@@ -10,6 +10,7 @@ import { getCookie } from '../utils/Cookies';
 import { X, Zap, Shield, Clock } from "lucide-react"
 
 export interface JwtPayload {
+  id: string;
   username: string;
   email: string;
   wallet_address: string;
@@ -19,6 +20,7 @@ const Loading: React.FC = () => {
   const token = getCookie('jwt');
   if (!token) return null;
   const decoded: JwtPayload = jwtDecode(token);
+  const Id = decoded.id;
   const Email = decoded.email;
   const WalletAddress = decoded.wallet_address;
   const Username = decoded.username;
@@ -34,7 +36,7 @@ const Loading: React.FC = () => {
 
     const handleConnect = () => {
       console.log("Connected to the server");
-      socket.emit('join_game', { walletAddress: WalletAddress, username: Username, email: Email });
+      socket.emit('join_game', { walletAddress: WalletAddress, username: Username, email: Email, id: Id });
     };
 
     const handleGameStart = (data: { opponent: string; roomID: string; html: string; opponentWalletAddress : string; problemID : string }) => {
@@ -48,6 +50,7 @@ const Loading: React.FC = () => {
           opponentWalletAddress: data.opponentWalletAddress, // Assuming opponent is the wallet address
           problemID: data.problemID,
           email: Email,
+          id: Id,
         },
       });
     };

@@ -4,7 +4,9 @@ import Landing from './pages/Landing';
 import Loading from './pages/Loading';
 import MainGame from './pages/MainGame';
 import FriendsPage from './pages/FriendsPage';
+import Profile from './pages/Profile';
 import AuthWrapper from './utils/AuthWrapper';
+import ProfileAuth from './utils/ProfileAuth';
 import Setjwt from './utils/Setjwt';
 import Disconnect from './utils/Disconnect';
 import { SocketProvider } from './utils/SocketContext';
@@ -18,6 +20,7 @@ function App() {
         <Route path="/friends" element={<AuthWrapper type={1}><FriendsPage /></AuthWrapper>} />
         <Route path="/loading" element={<AuthWrapper type={2}><SocketProvider><Loading /></SocketProvider></AuthWrapper>} />
         <Route path="/game" element={<AuthWrapper type={3}><SocketProvider><MainGame /></SocketProvider></AuthWrapper>} />
+        <Route path="/profile/:UserId" element={<ProfileAuth><Profile /></ProfileAuth>} />
         <Route path="/setjwt" element={<Setjwt />} />
         <Route path="/disconnect" element={<Disconnect />} />
       </Routes>

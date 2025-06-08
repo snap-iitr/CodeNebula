@@ -3,7 +3,7 @@ import Hero from "../components/Hero"
 import DashboardCards from "../components/DashboardCards"
 import QuickActions from "../components/QuickActions"
 import OnlineFriends from "../components/OnlineFriends"
-import RecentMatches from "../components/RecentMatches"
+// import RecentMatches from "../components/RecentMatches"
 import "../styles/Home.css"
 
 function App() {
@@ -21,7 +21,7 @@ function App() {
           <DashboardCards />
           <QuickActions />
           <OnlineFriends />
-          <RecentMatches />
+          {/* <RecentMatches /> */}
         </main>
       </div>
     </div>

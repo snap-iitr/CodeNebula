@@ -12,21 +12,17 @@ type Match = {
   completed_at: string;
 };
 
-const RecentMatches: React.FC = () => {
+const RecentMatches: React.FC<{ UserID: string }> = ({ UserID }) => {
   const [matches, setmatches] = useState<Match[]>([]);
-  const [UserID, setUserID] = useState<number>();
 
   useEffect(() => {
 
     async function get_data() {
       axios.post<Match[]>(
-        'http://localhost:3000/data?username=1',
-        {}, { withCredentials: true }
+        'http://localhost:3000/data',
+        { UserID }, { withCredentials: true }
       ).then(res =>{
-        const data = res.data;
-        setUserID(data[data.length-1].id);
-        data.pop();
-        setmatches(data);
+        setmatches(res.data);
       })
     }
     get_data();
@@ -34,17 +30,14 @@ const RecentMatches: React.FC = () => {
   },[]);
 
   return (
-    <section className="max-w-6xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-cyber tracking-wider">
-        RECENT MATCHES
-      </h2>
+    <section className="max-w-8xl mx-auto">
 
       <div className="grid gap-4">
         {matches.sort((a, b) => b.id - a.id).map((match) => (
           <div
             key={match.id}
             className={`p-6 bg-gray-800/50 backdrop-blur-sm border rounded-2xl transition-all duration-300 hover:scale-[1.02] ${
-              match.winner_id === UserID
+              match.winner_id === Number(UserID)
                 ? "border-green-500/30 hover:border-green-400/50"
                 : match.winner_id == 0
                 ? "border-blue-500/30 hover:border-blue-400/50"
@@ -55,14 +48,14 @@ const RecentMatches: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div
                   className={`p-3 rounded-xl ${
-                    match.winner_id === UserID 
+                    match.winner_id === Number(UserID) 
                     ? "bg-green-500/20 text-green-400" 
                     : match.winner_id == 0
                     ? "bg-blue-500/20 text-blue-400"
                     : "bg-red-500/20 text-red-400"
                   }`}
                 >
-                  {match.winner_id === UserID ? <Trophy size={24} /> : match.winner_id == 0 ?  <Equal size={24} /> : <X size={24} />}
+                  {match.winner_id === Number(UserID) ? <Trophy size={24} /> : match.winner_id == 0 ?  <Equal size={24} /> : <X size={24} />}
                 </div>
 
                 <div>
@@ -79,8 +72,8 @@ const RecentMatches: React.FC = () => {
                   <span className="text-gray-400">Stake: </span>
                   <span className="text-white">{match.stake_amount}</span>
                 </div>
-                <div className={`text-sm ${match.winner_id === UserID ? "text-green-400" : match.winner_id == 0 ?  "text-blue-400" : "text-red-400"}`}>
-                  {match.winner_id === UserID ? `Won: ${match.stake_amount}` : match.winner_id == 0 ? "Match Draw" : "Lost stake"}
+                <div className={`text-sm ${match.winner_id === Number(UserID) ? "text-green-400" : match.winner_id == 0 ?  "text-blue-400" : "text-red-400"}`}>
+                  {match.winner_id === Number(UserID) ? `Won: ${match.stake_amount}` : match.winner_id == 0 ? "Match Draw" : "Lost stake"}
                 </div>
               </div>
             </div>

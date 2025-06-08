@@ -15,6 +15,7 @@ type LocationState = {
   opponentWalletAddress: string;
   problemID: string;
   email: string;
+  id: string;
 };
 
 declare global {
@@ -186,9 +187,10 @@ const MainGame: React.FC = () => {
     const languageExtension = selectedLang?.extension;
     let problemID = state?.problemID;
     let roomID = state?.roomID;
+    let Id = state?.id;
     let WalletAddress = currentUser.walletAddress;
     let OpponentWalletAddress = opponent.walletAddress;
-    socket.emit('submit_code', { roomID, selectedLanguage, problemID, code, languageExtension, WalletAddress, OpponentWalletAddress });
+    socket.emit('submit_code', { roomID, selectedLanguage, problemID, code, languageExtension, WalletAddress, OpponentWalletAddress, Id });
   }
 
   const languages = [

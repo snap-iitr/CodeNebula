@@ -23,8 +23,9 @@ async (req, accessToken, refreshToken, profile, done) => {
         'INSERT INTO users (username, email, wallet_address) VALUES (?, ?, ?)',
         [profile.displayName, profile.emails[0].value,null]
       );
+      const [id] = await pool.query('SELECT max(id) as maxId FROM users');
       const user = {
-        id: result.insertId,
+        id: id[0].maxId,
         username: profile.displayName,
         email: profile.emails[0].value
       };
@@ -36,12 +37,12 @@ async (req, accessToken, refreshToken, profile, done) => {
 }));
 
 passport.serializeUser((user, done) => {
-  done(null, user.email);
+  done(null, user.id);
 });
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [id]);
+    const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
     done(null, rows[0]);
   } catch (err) {
     done(err, null);

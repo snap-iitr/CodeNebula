@@ -1,5 +1,5 @@
 const express = require('express');
-const { ethers, formatEther } = require("ethers");
+const { ethers, formatEther, id } = require("ethers");
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
@@ -18,6 +18,7 @@ const SEPOLIA_ETHERSCAN_API = process.env.SEPOLIA_ETHERSCAN_API;
 const ADMIN_WALLET_ADDRESS = process.env.ADMIN_WALLET_ADDRESS; 
 const { Server } = require('socket.io');
 const http = require('http');
+const { stat } = require('fs');
 const server = http.createServer(app);
 const loadingUsers = new Set(); // loading_userId
 const connectedUsers = new Map(); // connected_userId
@@ -78,8 +79,8 @@ io.on('connection', (socket) => {
       console.log(`⏱ Game in ${roomID} tied (time up)`);
     }, (15 * 60 * 1000) + 3000);
   }
-  
-  socket.on('join_game', async ({ walletAddress, username, email }) => {
+
+  socket.on('join_game', async ({ walletAddress, username, email, id }) => {
     console.log(`Player ${username} (${walletAddress}) wants to join a game.`);
 
     if (waitingPlayer) {
@@ -88,13 +89,12 @@ io.on('connection', (socket) => {
       const opponentUsername = waitingPlayer.username;
       const opponentWalletAddress = waitingPlayer.walletAddress;
       const opponentEmail = waitingPlayer.email;
+      const opponentId = waitingPlayer.id;
       const [result] = await pool.query('SELECT max(id) AS maxId from games');
       const roomID = result[0].maxId + 1;
-      const [ID] = await pool.query('SELECT id FROM users WHERE email = ?',[email]);
-      const [opponentID] = await pool.query('SELECT id FROM users WHERE email = ?',[opponentEmail]);
-      const [result4] = await pool.query(
+      await pool.query(
               'INSERT INTO games (player1_id, player2_id, winner_id,stake_amount) VALUES (?, ?, ?, ?)',
-              [ID[0].id, opponentID[0].id,0,0.001]
+              [id, opponentId,0,0.001]
             );
       waitingPlayer = null;
 
@@ -126,7 +126,7 @@ io.on('connection', (socket) => {
 
       console.log(`Game started in ${roomID}`);
     } else {
-      waitingPlayer = {socket,username,walletAddress,email};
+      waitingPlayer = {socket,username,walletAddress,email,id};
       console.log('Waiting for second player...');
     }
   });
@@ -152,7 +152,7 @@ io.on('connection', (socket) => {
   });
 
 
-  socket.on('submit_code', async ({ roomID, selectedLanguage, problemID, code, languageExtension, WalletAddress, OpponentWalletAddress }) => {
+  socket.on('submit_code', async ({ roomID, selectedLanguage, problemID, code, languageExtension, WalletAddress, OpponentWalletAddress, Id }) => {
     const [result] = await pool.query('SELECT * FROM games where id = ?',[roomID]);
     console.log(result[0]);
     const game = result[0];
@@ -168,10 +168,9 @@ io.on('connection', (socket) => {
       });
       console.log(res.data);
       if(res.data == "ACCEPTED"){
-        const [ID] = await pool.query('SELECT id FROM users WHERE wallet_address = ?',[WalletAddress]);
-        const [result] = await pool.query(
+        await pool.query(
           'UPDATE games SET winner_id = ? WHERE id = ?',
-          [ID[0].id, roomID]
+          [Id, roomID]
         );
         Transaction(WalletAddress.toString(),"0.0018");
       }
@@ -208,6 +207,7 @@ app.get('/auth/google/callback',
     (req, res) => {
         // Generate JWT payload - you can customize this
         const payload = {
+          id : req.user.id,
           username : req.user.username,
           email : req.user.email,
           wallet_address : null,
@@ -220,6 +220,7 @@ app.get('/auth/google/callback',
 );
 
 app.post('/verify-token', (req,res) => { // type-1 is basic, type-2 is loading, type-3 is gaming
+  console.log("Here");
   const { type } = req.body;
   const token = req.cookies.jwt;
   if (!token) {
@@ -244,6 +245,28 @@ app.post('/verify-token', (req,res) => { // type-1 is basic, type-2 is loading, 
   });
 });
 
+app.post('/profile-verify', (req,res) => { // type-1 is basic, type-2 is loading, type-3 is gaming
+  const { UserId } = req.body;
+  const token = req.cookies.jwt;
+  if (!token || !UserId) return res.json({status: 0});
+
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+    if (err || !decoded || !decoded.id || !decoded.username || !decoded.email || !decoded.wallet_address) {
+      return res.json({status: 0});
+    }
+    if(UserId!=decoded.id){
+      let [status] = await pool.query(
+        'SELECT status FROM friends WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)',
+        [decoded.id, UserId, UserId, decoded.id]
+      );
+      if(!status || status.length === 0 || status[0].status === false){
+        return res.json({status: 0});
+      }
+    }
+    return res.json({status: 1});
+  });
+});
+
 
 app.post('/auth/metamask', async (req, res) => {
   const { address } = req.body;
@@ -254,11 +277,9 @@ app.post('/auth/metamask', async (req, res) => {
       return res.status(401).json({ status: 0, error: 'Invalid token' });
     }
     if(decoded && decoded.email){
-      const [result] = await pool.query(
-              'UPDATE users SET wallet_address = ? WHERE email = ?',
-              [address,decoded.email]
-            );
+      await pool.query('UPDATE users SET wallet_address = ? WHERE email = ?',[address,decoded.email]);
       const payload = {
+          id : decoded.id,
           username : decoded.username,
           email : decoded.email,
           wallet_address : address,
@@ -312,8 +333,7 @@ app.post('/set-loading', async (req, res) => {
 });
 
 app.post('/data', async (req, res) => {
-  let userreq;
-  userreq = req.query.username;
+  let UserID = req.body.UserID;
   const token = req.cookies.jwt;
   let userdata;
   jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
@@ -323,11 +343,7 @@ app.post('/data', async (req, res) => {
     userdata = decoded;
   });
 
-  const user = await pool.query(
-    'SELECT id FROM users WHERE email = ?',
-    [userdata.email]
-  );
-  if(userreq){
+  if(UserID){
     let [data]  = await pool.query(
       `SELECT 
           g.id AS id,
@@ -342,23 +358,17 @@ app.post('/data', async (req, res) => {
       JOIN users u1 ON g.player1_id = u1.id
       JOIN users u2 ON g.player2_id = u2.id
       WHERE g.player1_id = ? OR g.player2_id = ?;`,
-      [user[0][0].id,user[0][0].id,user[0][0].id]
+      [UserID, UserID, UserID]
     );
-    data.push({
-      id: user[0][0].id,
-      username: userdata.username,
-      email: userdata.email,
-      wallet_address: userdata.wallet_address
-    });
     res.json(data);
   }
   else{
     let [data]  = await pool.query(
       'SELECT * FROM games WHERE player1_id = ? OR player2_id = ?',
-      [user[0][0].id,user[0][0].id]
+      [userdata.id,userdata.id]
     );
     data.push({
-      id: user[0][0].id,
+      id: userdata.id,
       username: userdata.username,
       email: userdata.email,
       wallet_address: userdata.wallet_address
@@ -378,10 +388,6 @@ app.get('/get-friends', async (req, res) => {
     userdata = decoded;
   });
 
-  const user = await pool.query(
-    'SELECT id FROM users WHERE email = ?',
-    [userdata.email]
-  );
   let [data]  = await pool.query(
     `SELECT 
       u.id AS id,
@@ -406,7 +412,7 @@ app.get('/get-friends', async (req, res) => {
       AND (? IN (f.requester_id, f.addressee_id))
 
     GROUP BY u.id, u.username, u.wallet_address;`,
-    [user[0][0].id,user[0][0].id,user[0][0].id]
+    [userdata.id,userdata.id,userdata.id]
   );
   let [data2]  = await pool.query(
     `SELECT 
@@ -418,7 +424,7 @@ app.get('/get-friends', async (req, res) => {
     JOIN users u ON u.id = f.requester_id
     WHERE f.addressee_id = ?
       AND f.status = FALSE;`,
-    [user[0][0].id] 
+    [userdata.id]
   );
   res.json({
     "Friends" : data,
@@ -438,10 +444,6 @@ app.post('/search-friends', async (req, res) => {
     userdata = decoded;
   });
 
-  const user = await pool.query(
-    'SELECT id FROM users WHERE email = ?',
-    [userdata.email]
-  );
   let [data]  = await pool.query(
     `SELECT
       u.id AS id,
@@ -464,7 +466,7 @@ app.post('/search-friends', async (req, res) => {
         FROM friends f
         WHERE (f.requester_id = ? OR f.addressee_id = ?)
       );`,
-    [user[0][0].id,searchQuery,searchQuery,searchQuery,user[0][0].id,user[0][0].id,user[0][0].id]
+    [userdata.id,searchQuery,searchQuery,searchQuery,userdata.id,userdata.id,userdata.id]
   );
   res.json(data);
 });
@@ -481,21 +483,16 @@ app.post('/request-friend', async (req, res) => {
     userdata = decoded;
   });
 
-  const user = await pool.query(
-    'SELECT id FROM users WHERE email = ?',
-    [userdata.email]
-  );
-
   if(value){
     await pool.query(
       'UPDATE friends SET status = TRUE WHERE requester_id = ? AND addressee_id = ?',
-      [requestId, user[0][0].id]
+      [requestId, userdata.id]
     );
   }
   else {
     await pool.query(
       'DELETE FROM friends WHERE requester_id = ? AND addressee_id = ?',
-      [requestId, user[0][0].id]
+      [requestId, userdata.id]
     );
   }
   res.send("Done!");
@@ -513,28 +510,79 @@ app.post('/add-friend', async (req, res) => {
     userdata = decoded;
   });
 
-  const user = await pool.query(
-    'SELECT id FROM users WHERE email = ?',
-    [userdata.email]
-  );
-
   const [result] = await pool.query(
     'SELECT * FROM friends WHERE requester_id = ? AND addressee_id = ?',
-    [FriendId,user[0][0].id]
+    [FriendId, userdata.id]
   );
   if(result.length > 0){
     await pool.query(
       'UPDATE friends SET status = TRUE WHERE requester_id = ? AND addressee_id = ?',
-      [FriendId, user[0][0].id]
+      [FriendId, userdata.id]
     );
   }
   else {
     await pool.query(
       'INSERT INTO friends (requester_id, addressee_id, status) VALUES (?, ?, FALSE)',
-      [user[0][0].id, FriendId]
+      [userdata.id, FriendId]
     );
   }
   res.send("Done!");
+});
+
+app.post('/player-data', async (req, res) => {
+  let UserID = req.body.UserId;
+  const token = req.cookies.jwt;
+  let userdata;
+  if(!token) return res.status(400).json({ status: 0, error: 'No token provided' });
+  if(!UserID) return res.status(400).json({ status: 0, error: 'No UserID provided' });
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+    if (err || !decoded || !decoded.id || !decoded.username || !decoded.email || !decoded.wallet_address) {
+      return res.status(401).json({ status: 0, error: 'Invalid token' });
+    }
+    userdata = decoded;
+    if(UserID!=userdata.id){
+      let [status] = await pool.query(
+        'SELECT status FROM friends WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)',
+        [userdata.id, UserID, UserID, userdata.id]
+      );
+      if(!status || status.length === 0 || status[0].status === false){
+        return res.status(400).json({ status: 0, error: 'You are not friends with this user' });
+      }
+    }
+  
+    let [data]  = await pool.query(
+      'SELECT * FROM users WHERE id = ?',
+      [UserID]
+    );
+    res.json(data[0]);
+  });
+});
+
+app.post('/player-matches-data', async (req, res) => {
+  let UserID = req.body.UserId;
+  const token = req.cookies.jwt;
+  if(!token) return res.status(400).json({ status: 0, error: 'No token provided' });
+  if(!UserID) return res.status(400).json({ status: 0, error: 'No UserID provided' });
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+    if (err || !decoded || !decoded.id || !decoded.username || !decoded.email || !decoded.wallet_address) {
+      return res.status(401).json({ status: 0, error: 'Invalid token' });
+    }
+    if(UserID!=decoded.id){
+      let [status] = await pool.query(
+        'SELECT status FROM friends WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)',
+        [decoded.id, UserID, UserID, decoded.id]
+      );
+      if(!status || status.length === 0 || status[0].status === false){
+        return res.status(400).json({ status: 0, error: 'You are not friends with this user' });
+      }
+    }
+  
+    let [data]  = await pool.query(
+      'SELECT * FROM games WHERE player1_id = ? OR player2_id = ?',
+      [UserID,UserID]
+    );
+    res.json(data);
+  });
 });
 
 app.get('/', (req, res) => {

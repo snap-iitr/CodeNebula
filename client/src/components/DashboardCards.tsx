@@ -94,7 +94,6 @@ const DashboardCards: React.FC =  () => {
     if(lastMatch) setLastGameAmount(lastMatch.stake_amount);
     else setLastGameAmount("---");
 
-
   },[UserGames]);
 
   const cards = [
