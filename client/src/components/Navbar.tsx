@@ -5,18 +5,20 @@ import { useState } from "react"
 import { jwtDecode } from 'jwt-decode';
 import { getCookie } from '../utils/Cookies';
 import { Link } from "react-router";
-import { Menu, X, Settings, LogOut, User } from "lucide-react"
+import { Menu, X, LogOut, User } from "lucide-react"
 
-export interface JwtPayload {
+interface JwtPayload {
+  id: string;
   username: string;
   email: string;
   wallet_address: string;
 }
 
-const Navbar: React.FC = () => {
+const Navbar: React.FC<{PageName : string}> = ({PageName}) => {
   const token = getCookie('jwt');
   if (!token) return null;
   const decoded: JwtPayload = jwtDecode(token);
+  const Id = decoded.id;
   const walletAddress = decoded.wallet_address;
   const username = decoded.username;
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -39,18 +41,18 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">
+            <Link to="/home" className={`hover:text-blue-400 transition-colors duration-200 ${PageName == "Home" ? "text-purple-300" : "text-gray-300 "}`}>
               Home
-            </a>
-            <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">
+            </Link>
+            <Link to={`/profile/${Id}`} className={`hover:text-blue-400 transition-colors duration-200 ${PageName == "Profile" ? "text-purple-300" : "text-gray-300 "}`}>
               Profile
-            </a>
-            <Link to="/friends" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">
+            </Link>
+            <Link to="/friends" className={`hover:text-blue-400 transition-colors duration-200 ${PageName == "Friends" ? "text-purple-300" : "text-gray-300 "}`}>
               Friends
             </Link>
-            <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">
+            <Link to = "/leaderboard" className={`hover:text-blue-400 transition-colors duration-200 ${PageName == "Leaderboard" ? "text-purple-300" : "text-gray-300 "}`}>
               Leaderboard
-            </a>
+            </Link>
           </div>
 
           {/* Wallet Info & Avatar */}
@@ -72,13 +74,13 @@ const Navbar: React.FC = () => {
               {/* Dropdown */}
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-md border border-purple-500/30 rounded-lg shadow-xl">
-                  <a
-                    href="#"
+                  <Link
+                    to={`/profile/${Id}`}
                     className="flex items-center space-x-2 px-4 py-3 text-sm hover:bg-purple-500/20 transition-colors"
                   >
-                    <Settings size={16} />
-                    <span>Settings</span>
-                  </a>
+                    <User size={16} />
+                    <span>My Profile</span>
+                  </Link>
                   <Link
                     to="/disconnect"
                     className="flex items-center space-x-2 px-4 py-3 text-sm hover:bg-red-500/20 transition-colors text-red-400"
@@ -104,18 +106,18 @@ const Navbar: React.FC = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-purple-500/20">
             <div className="flex flex-col space-y-4">
-              <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors">
+              <Link to="/home" className="text-gray-300 hover:text-blue-400 transition-colors">
                 Home
-              </a>
-              <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors">
+              </Link>
+              <Link to={`/profile/${Id}`} className="text-gray-300 hover:text-blue-400 transition-colors">
                 Profile
-              </a>
-              <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors">
+              </Link>
+              <Link to="/friends" className="text-gray-300 hover:text-blue-400 transition-colors">
                 Friends
-              </a>
-              <a href="#" className="text-gray-300 hover:text-blue-400 transition-colors">
+              </Link>
+              <Link to="/home" className="text-gray-300 hover:text-blue-400 transition-colors">
                 Leaderboard
-              </a>
+              </Link>
               <div className="pt-4 border-t border-purple-500/20">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
@@ -127,14 +129,14 @@ const Navbar: React.FC = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <a href="#" className="flex items-center space-x-2 text-sm text-gray-300">
-                    <Settings size={16} />
-                    <span>Settings</span>
-                  </a>
-                  <a href="#" className="flex items-center space-x-2 text-sm text-red-400">
+                  <Link to={`/profile/${Id}`} className="flex items-center space-x-2 text-sm text-gray-300">
+                    <User size={16} />
+                    <span>My Profile</span>
+                  </Link>
+                  <Link to="/disconnect" className="flex items-center space-x-2 text-sm text-red-400">
                     <LogOut size={16} />
                     <span>Disconnect</span>
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

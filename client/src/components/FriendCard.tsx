@@ -1,5 +1,6 @@
 import type React from "react"
 import { motion } from "framer-motion"
+import { Link } from "react-router";
 import { Zap, MessageCircle } from "lucide-react"
 
 interface Friend {
@@ -53,14 +54,12 @@ const FriendCard: React.FC<{ friend: Friend }> = ({ friend }) => (
         </div>
 
         <div className="flex space-x-3">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <Link to={`/profile/${friend.id}`}
             className="flex-1 flex items-center justify-center space-x-2 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-200"
           >
             <Zap size={16} />
             <span>View Profile</span>
-          </motion.button>
+          </Link>
 
           <motion.button
             whileHover={{ scale: 1.05 }}

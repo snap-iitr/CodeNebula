@@ -2,10 +2,24 @@ import type React from "react"
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { BrowserProvider, parseEther } from 'ethers';
+import { jwtDecode } from 'jwt-decode';
+import { getCookie } from '../utils/Cookies';
+import { Link } from "react-router";
 import { Zap, Users, Trophy } from "lucide-react"
+
+interface JwtPayload {
+  id: string;
+  username: string;
+  email: string;
+  wallet_address: string;
+}
 
 const Hero: React.FC = () => {
   const navigate = useNavigate();
+  const token = getCookie('jwt');
+  if (!token) return null;
+  const decoded: JwtPayload = jwtDecode(token);
+  const username = decoded.username;
 
   const handleStart = async () => {
     try{
@@ -52,7 +66,7 @@ const Hero: React.FC = () => {
       <div className="relative z-10 text-center max-w-4xl mx-auto">
         <div className="mb-6">
           <span className="inline-block px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-full text-sm font-medium mb-4 font-cyber tracking-wide">
-            WELCOME BACK TO THE ARENA, CRYPTOGAMER!
+            WELCOME BACK TO THE ARENA, {username.toLocaleUpperCase()}!
           </span>
         </div>
 
@@ -73,19 +87,19 @@ const Hero: React.FC = () => {
             </div>
           </button>
 
-          <button className="group relative px-8 py-4 bg-gray-800/50 border border-purple-500/30 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 hover:border-purple-400/50 hover:bg-gray-700/50">
+          <Link to="/friends" className="group relative px-8 py-4 bg-gray-800/50 border border-purple-500/30 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 hover:border-purple-400/50 hover:bg-gray-700/50">
             <div className="flex items-center space-x-2">
               <Users size={24} />
-              <span>Challenge a Friend</span>
+              <span>Checkout Friends</span>
             </div>
-          </button>
+          </Link>
 
-          <button className="group relative px-8 py-4 bg-gray-800/50 border border-green-500/30 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 hover:border-green-400/50 hover:bg-gray-700/50">
+          <Link to="/leaderboard" className="group relative px-8 py-4 bg-gray-800/50 border border-green-500/30 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 hover:border-green-400/50 hover:bg-gray-700/50">
             <div className="flex items-center space-x-2">
               <Trophy size={24} />
               <span>View Leaderboard</span>
             </div>
-          </button>
+          </Link>
         </div>
       </div>
     </section>

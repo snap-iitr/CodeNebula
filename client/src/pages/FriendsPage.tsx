@@ -8,6 +8,7 @@ import FriendCard from "../components/FriendCard"
 import RequestCard from "../components/RequestCard"
 import SearchFriendCard from "../components/SearchFriendCard"
 import LoadingSkeleton from '../components/LoadingSkeleton'
+import Navbar from '../components/Navbar';
 
 
 interface Friend {
@@ -131,32 +132,7 @@ const FriendsPage: React.FC = () => {
 
       <div className="relative z-10 min-h-screen">
         {/* Header */}
-        <motion.header
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-6 border-b border-gray-700/50 backdrop-blur-sm"
-        >
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">E</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent font-cyber tracking-wider">
-                  FRIENDS
-                </h1>
-                <p className="text-gray-400 text-sm">Manage your gaming network</p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm text-gray-400">
-                <Users size={16} />
-                <span>{friends.length} Friends</span>
-              </div>
-            </div>
-          </div>
-        </motion.header>
+        <Navbar PageName="Friends"/>
 
         <div className="max-w-7xl mx-auto p-6">
           <div className="flex flex-col lg:flex-row gap-6">

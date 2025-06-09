@@ -8,7 +8,8 @@ import { useParams } from 'react-router-dom';
 import RecentMatches from "../components/RecentMatches"
 import BadgeCard from "../components/BadgeCard";
 import StatCard from "../components/StatCard"
-import { Edit, Trophy, Target, TrendingUp, Zap, Award, Crown, Shield, Flame, Star } from "lucide-react"
+import Navbar from "../components/Navbar"
+import { Trophy, Target, TrendingUp, Zap, Award, Crown, Shield, Flame, Star } from "lucide-react"
 
 interface Badge {
   name: string
@@ -37,7 +38,6 @@ type Match = {
 const Profile: React.FC = () => {
 
     const { UserId } = useParams<{ UserId: string }>()
-    const [isEditing, setIsEditing] = useState(false)
     const [UserGames, setUserGames] = useState<Match[]>([]);
     const [walletAddress, setWalletAddress] = useState<string>("Loading...");
     const [Username, setUsername] = useState<string>("Loading...");
@@ -72,7 +72,7 @@ const Profile: React.FC = () => {
         
         get_player_data();
         get_data();
-    }, []);
+    }, [UserId]);
 
     useEffect(() => {
         if(!UserGames || UserGames.length === 0) return;
@@ -166,35 +166,7 @@ const Profile: React.FC = () => {
 
         <div className="relative z-10 min-h-screen">
         {/* Header */}
-        <motion.header
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-6 border-b border-gray-700/50 backdrop-blur-sm"
-        >
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">E</span>
-                </div>
-                <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent font-cyber tracking-wider">
-                    PROFILE
-                </h1>
-                <p className="text-gray-400 text-sm">Your gaming statistics and achievements</p>
-                </div>
-            </div>
-
-            <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsEditing(!isEditing)}
-                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-200"
-            >
-                <Edit size={16} />
-                <span>Edit Profile</span>
-            </motion.button>
-            </div>
-        </motion.header>
+        <Navbar PageName={"Profile"}/>
 
         <div className="max-w-7xl mx-auto p-6 space-y-8">
             {/* User Header */}

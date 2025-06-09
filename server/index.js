@@ -220,7 +220,6 @@ app.get('/auth/google/callback',
 );
 
 app.post('/verify-token', (req,res) => { // type-1 is basic, type-2 is loading, type-3 is gaming
-  console.log("Here");
   const { type } = req.body;
   const token = req.cookies.jwt;
   if (!token) {

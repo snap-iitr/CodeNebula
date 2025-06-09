@@ -1,31 +1,50 @@
 import type React from "react"
-import { Zap, Users, User, Settings } from "lucide-react"
+import { Link } from "react-router";
+import { jwtDecode } from 'jwt-decode';
+import { getCookie } from '../utils/Cookies';
+import { Zap, Users, User, Trophy } from "lucide-react"
+
+interface JwtPayload {
+  id: string;
+  username: string;
+  email: string;
+  wallet_address: string;
+}
 
 const QuickActions: React.FC = () => {
+  const token = getCookie('jwt');
+  if (!token) return null;
+  const decoded: JwtPayload = jwtDecode(token);
+  const Id = decoded.id;
+
   const actions = [
     {
       label: "Start Game",
+      link: "/home",
       icon: Zap,
       color: "from-blue-500 to-purple-500",
       hoverColor: "hover:from-blue-400 hover:to-purple-400",
     },
     {
       label: "Friends",
+      link: "/friends",
       icon: Users,
       color: "from-purple-500 to-pink-500",
       hoverColor: "hover:from-purple-400 hover:to-pink-400",
     },
     {
       label: "Profile",
+      link: `/profile/${Id}`,
       icon: User,
       color: "from-green-500 to-emerald-500",
       hoverColor: "hover:from-green-400 hover:to-emerald-400",
     },
     {
-      label: "Settings",
-      icon: Settings,
-      color: "from-gray-600 to-gray-700",
-      hoverColor: "hover:from-gray-500 hover:to-gray-600",
+      label: "Leaderboard",
+      link: "/leaderboard",
+      icon: Trophy,
+      color: "from-yellow-500 to-orange-500",
+      hoverColor: "hover:from-yellow-400 hover:to-orange-400",
     },
   ]
 
@@ -37,7 +56,7 @@ const QuickActions: React.FC = () => {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {actions.map((action, index) => (
-          <button
+          <Link to={action.link}
             key={index}
             className={`group relative p-6 bg-gradient-to-br ${action.color} rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-2xl ${action.hoverColor}`}
           >
@@ -47,7 +66,7 @@ const QuickActions: React.FC = () => {
               </div>
               <span className="text-white font-semibold">{action.label}</span>
             </div>
-          </button>
+          </Link>
         ))}
       </div>
     </section>

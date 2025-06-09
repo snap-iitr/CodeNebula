@@ -3,7 +3,8 @@ import Hero from "../components/Hero"
 import DashboardCards from "../components/DashboardCards"
 import QuickActions from "../components/QuickActions"
 import OnlineFriends from "../components/OnlineFriends"
-// import RecentMatches from "../components/RecentMatches"
+import HowItWorks from "../components/HowItWorks"
+import Footer from "../components/Footer"
 import "../styles/Home.css"
 
 function App() {
@@ -15,13 +16,14 @@ function App() {
       </div>
 
       <div className="relative z-10">
-        <Navbar />
+        <Navbar PageName={"Home"}/>
         <main className="container mx-auto px-4 py-8 space-y-12">
           <Hero />
           <DashboardCards />
           <QuickActions />
           <OnlineFriends />
-          {/* <RecentMatches /> */}
+          <HowItWorks />
+          <Footer />
         </main>
       </div>
     </div>
