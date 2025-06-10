@@ -4,6 +4,7 @@ import Landing from './pages/Landing';
 import Loading from './pages/Loading';
 import MainGame from './pages/MainGame';
 import FriendsPage from './pages/FriendsPage';
+import LeaderboardPage from './pages/Leaderboard';
 import Profile from './pages/Profile';
 import AuthWrapper from './utils/AuthWrapper';
 import ProfileAuth from './utils/ProfileAuth';
@@ -18,6 +19,7 @@ function App() {
         <Route path="/connect-more" element={<Landing status={1} />} />
         <Route path="/home" element={<AuthWrapper type={1}><Home /></AuthWrapper>} />
         <Route path="/friends" element={<AuthWrapper type={1}><FriendsPage /></AuthWrapper>} />
+        <Route path="/leaderboard" element={<AuthWrapper type={1}><LeaderboardPage /></AuthWrapper>} />
         <Route path="/loading" element={<AuthWrapper type={2}><SocketProvider><Loading /></SocketProvider></AuthWrapper>} />
         <Route path="/game" element={<AuthWrapper type={3}><SocketProvider><MainGame /></SocketProvider></AuthWrapper>} />
         <Route path="/profile/:UserId" element={<ProfileAuth><Profile /></ProfileAuth>} />

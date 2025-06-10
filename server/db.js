@@ -34,7 +34,6 @@ module.exports = pool.promise();
 //     requester_id INT NOT NULL,
 //     addressee_id INT NOT NULL,
 //     status BOOLEAN DEFAULT FALSE,
-
 //     FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
 //     FOREIGN KEY (addressee_id) REFERENCES users(id) ON DELETE CASCADE
 // );

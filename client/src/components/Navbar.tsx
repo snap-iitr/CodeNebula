@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { jwtDecode } from 'jwt-decode';
 import { getCookie } from '../utils/Cookies';
 import { Link } from "react-router";
@@ -24,9 +24,22 @@ const Navbar: React.FC<{PageName : string}> = ({PageName}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (isDropdownOpen) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener("click", handleClickOutside)
+    document.addEventListener("scroll", handleClickOutside)
+    return () => document.removeEventListener("click", handleClickOutside)
+  }, [isDropdownOpen])
+
 
   return (
-    <nav className="relative z-50 bg-black/20 backdrop-blur-md border-b border-purple-500/20">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-md border-b border-purple-500/20">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -59,7 +72,10 @@ const Navbar: React.FC<{PageName : string}> = ({PageName}) => {
           <div className="hidden md:flex items-center space-x-4">
             <div className="relative">
               <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsDropdownOpen(!isDropdownOpen)
+                }}
                 className="flex items-center space-x-3 bg-gray-800/50 backdrop-blur-sm border border-purple-500/30 rounded-lg px-4 py-2 hover:border-purple-400/50 transition-all duration-200"
               >
                 <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">

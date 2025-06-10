@@ -83,7 +83,7 @@ const Profile: React.FC = () => {
         setTotalWins(wins.length);
         setWinRate(((wins.length / UserGames.length) * 100).toFixed(2));
 
-        const totalEthWon = wins.reduce((sum, match) => sum + parseFloat(match.stake_amount), 0);
+        const totalEthWon = wins.reduce((sum, match) => sum + ((1.8)*parseFloat(match.stake_amount)), 0);
         setEthWon(totalEthWon);
 
         const lastMatch = UserGames.sort(
@@ -168,7 +168,7 @@ const Profile: React.FC = () => {
         {/* Header */}
         <Navbar PageName={"Profile"}/>
 
-        <div className="max-w-7xl mx-auto p-6 space-y-8">
+        <div className="max-w-7xl mx-auto p-6 space-y-8 py-24">
             {/* User Header */}
             <motion.section
             initial={{ opacity: 0, y: 20 }}

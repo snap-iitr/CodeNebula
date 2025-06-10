@@ -584,6 +584,69 @@ app.post('/player-matches-data', async (req, res) => {
   });
 });
 
+app.get('/leaderboard-data', async (req, res) => {
+  const token = req.cookies.jwt;
+  if(!token) return res.status(400).json({ status: 0, error: 'No token provided' });
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+    if (err || !decoded || !decoded.id || !decoded.username || !decoded.email || !decoded.wallet_address) {
+      return res.status(401).json({ status: 0, error: 'Invalid token' });
+    }
+  
+    let [data]  = await pool.query(
+      `WITH total_games AS (
+          SELECT 
+              u.id AS user_id,
+              COUNT(g.id) AS total_matches
+          FROM users u
+          LEFT JOIN games g 
+              ON u.id = g.player1_id OR u.id = g.player2_id
+          GROUP BY u.id
+      ),
+      wins_and_eth AS (
+          SELECT 
+              u.id AS user_id,
+              COUNT(g.id) AS won_matches,
+              ROUND(SUM(g.stake_amount * 1.8), 3) AS eth_earned
+          FROM users u
+          JOIN games g 
+              ON u.id = g.winner_id
+          GROUP BY u.id
+      ),
+      final_stats AS (
+          SELECT
+              u.id,
+              u.username,
+              COALESCE(tg.total_matches, 0) AS totalMatches,
+              COALESCE(we.won_matches, 0) AS wonMatches,
+              COALESCE(we.eth_earned, 0) AS ethEarned,
+              ROUND(
+                  100.0 * COALESCE(we.won_matches, 0) / NULLIF(COALESCE(tg.total_matches, 0), 0),
+                  2
+              ) AS winPercentage
+          FROM users u
+          LEFT JOIN total_games tg ON u.id = tg.user_id
+          LEFT JOIN wins_and_eth we ON u.id = we.user_id
+      )
+      SELECT
+          id,
+          RANK() OVER (
+              ORDER BY wonMatches DESC, totalMatches
+          ) AS u_rank,
+          username,
+          winPercentage,
+          ethEarned,
+          totalMatches,
+          wonMatches
+      FROM final_stats
+      WHERE totalMatches > 0
+      ORDER BY wonMatches DESC, totalMatches
+      LIMIT 10;`
+    );
+    res.json(data);
+  });
+});
+
+
 app.get('/', (req, res) => {
   console.log("Loading users: ",loadingUsers);
   console.log("Connected users: ",connectedUsers);

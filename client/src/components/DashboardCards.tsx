@@ -81,7 +81,7 @@ const DashboardCards: React.FC =  () => {
     const losses = UserGames.filter(match => (match.winner_id !== UserID && match.winner_id !== 0));
     setWinRate(((wins.length / UserGames.length) * 100).toFixed(2));
 
-    const totalEthWon = wins.reduce((sum, match) => sum + parseFloat(match.stake_amount), 0);
+    const totalEthWon = wins.reduce((sum, match) => sum + ((1.8)*parseFloat(match.stake_amount)), 0);
     const totalEthLost = losses.reduce((sum, match) => sum + parseFloat(match.stake_amount), 0);
     setEthWon(totalEthWon);
     setEthLost(totalEthLost);
