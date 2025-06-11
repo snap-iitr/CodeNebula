@@ -49,7 +49,7 @@ const FriendsPage: React.FC = () => {
     const loadData = async () => {
 
       await axios.get<{Friends : Friend[]; FriendsRequests : FriendRequest[]}>(
-        'http://localhost:3000/get-friends',
+        `${import.meta.env.VITE_SERVER_API_URL}/get-friends`,
         { withCredentials: true }
       ).then(res => {
         // Handle successful response
@@ -70,7 +70,7 @@ const FriendsPage: React.FC = () => {
       const timer = setTimeout(async () => {
 
         await axios.post<SearchResult[]>(
-          'http://localhost:3000/search-friends',
+          `${import.meta.env.VITE_SERVER_API_URL}/search-friends`,
           { searchQuery },
           { withCredentials: true }
         ).then(res => {

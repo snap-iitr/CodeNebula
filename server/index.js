@@ -25,7 +25,7 @@ const connectedUsers = new Map(); // connected_userId
 const txHashes = new Set(); // txHash
 
 app.use(cors({
-    origin: 'http://localhost:5000',
+    origin: process.env.CLIENT_API_URL,
     credentials: true
 }));
 
@@ -39,7 +39,7 @@ app.use(session({
 // Initialize Socket.IO
 const io = new Server(server, {
   cors: { 
-    origin: 'http://localhost:5000',
+    origin: process.env.CLIENT_API_URL,
     credentials: true
   },
 });
@@ -99,7 +99,7 @@ io.on('connection', (socket) => {
       waitingPlayer = null;
 
       // Fetch a CP question from external API
-      const res = await axios.get('http://localhost:8000/random_problem');
+      const res = await axios.get(process.env.PYTHON_API_URL + '/random_problem');
       
       loadingUsers.delete(email);
       loadingUsers.delete(opponentEmail);
@@ -140,7 +140,7 @@ io.on('connection', (socket) => {
 
   socket.on('run_code', async ({ languageCode, code, input }) => {
     try {
-      const res = await axios.post('http://localhost:8000/run', {
+      const res = await axios.post(process.env.PYTHON_API_URL + '/run', {
         languageCode,
         code,
         input
@@ -160,7 +160,7 @@ io.on('connection', (socket) => {
     if (!game || game.winner_id) return;
 
     try {
-      const res = await axios.post('http://localhost:8000/submit', {
+      const res = await axios.post(process.env.PYTHON_API_URL + '/submit', {
         problemID,
         selectedLanguage,
         code,
@@ -215,7 +215,7 @@ app.get('/auth/google/callback',
         // Successful authentication, generate JWT
         const token = jwt.sign(payload, process.env.JWT_SECRET);
         // Redirect to the external website with the JWT as a query parameter
-        res.redirect(`http://localhost:5000/setjwt?token=${token}`); // Change to your desired URL
+        res.redirect(`${process.env.CLIENT_API_URL}/setjwt?token=${token}`); // Change to your desired URL
     }
 );
 
@@ -647,10 +647,16 @@ app.get('/leaderboard-data', async (req, res) => {
 });
 
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
   console.log("Loading users: ",loadingUsers);
   console.log("Connected users: ",connectedUsers);
   console.log("Transaction Hashes: ",txHashes);
+  const [users] = await pool.query('SELECT * FROM users');
+  const [games] = await pool.query('SELECT * FROM games');
+  const [friends] = await pool.query('SELECT * FROM friends');
+  console.log(users);
+  console.log(games);
+  console.log(friends);
   res.send('Hello from Express!');
 });
 

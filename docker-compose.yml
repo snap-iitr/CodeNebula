@@ -1,0 +1,69 @@
+# version: '3.8'
+
+services:
+  client:
+    build:
+      context: ./client
+    ports:
+      - "5000:5000"
+    depends_on:
+      - server
+      - api
+    env_file:
+      - ./client/.env.local
+    volumes:
+      - ./client:/app
+      - /app/node_modules  # avoid overwriting node_modules
+    working_dir: /app
+    environment:
+      - CHOKIDAR_USEPOLLING=true  # important for file watching in Docker
+    command: npm run dev
+
+  server:
+    build:
+      context: ./server
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./server/.env
+    depends_on:
+      - mysql
+      - api
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    working_dir: /app
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    command: npm start
+
+  api:
+    build:
+      shm_size: '2gb'
+      context: ./api
+    env_file:
+      - ./api/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+    environment:
+      - FLASK_ENV=development
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD="${DB_ROOT_PASSWORD}"
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local

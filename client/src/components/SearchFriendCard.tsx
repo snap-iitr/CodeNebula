@@ -20,7 +20,7 @@ const SearchFriendCard: React.FC<SearchFriendCardProps> = ({ result , onChange }
   const handleAddFriend = async () => {
     // Logic to add the friend
     await axios.post<string>(
-        'http://localhost:3000/add-friend',
+        `${import.meta.env.VITE_SERVER_API_URL}/add-friend`,
         { FriendId: result.id },
         { withCredentials: true }
       ).then(res => {

@@ -51,7 +51,7 @@ const Profile: React.FC = () => {
     useEffect(() => {
         async function get_player_data() {
         axios.post<Player>(
-            'http://localhost:3000/player-data',
+            `${import.meta.env.VITE_SERVER_API_URL}/player-data`,
             { UserId }, { withCredentials: true }
         ).then(res =>{
             const data = res.data;
@@ -62,7 +62,7 @@ const Profile: React.FC = () => {
 
         async function get_data() {
         axios.post<Match[]>(
-            'http://localhost:3000/player-matches-data',
+            `${import.meta.env.VITE_SERVER_API_URL}/player-matches-data`,
             { UserId }, { withCredentials: true }
         ).then(res =>{
             const data = res.data;

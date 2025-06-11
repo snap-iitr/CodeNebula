@@ -25,7 +25,7 @@ const Landing: React.FC<IndexProps> = ({ status = 0 }) => {
 
   const handleGoogleLogin = () => {
     console.log('Google login initiated');
-    window.location.href = 'http://localhost:3000/auth/google';
+    window.location.href = `${import.meta.env.VITE_SERVER_API_URL}/auth/google`;
   };
 
 const handleMetaMaskConnect = async () => {
@@ -41,7 +41,7 @@ const handleMetaMaskConnect = async () => {
     const address = accounts[0];
     
     axios.post<string>(
-      'http://localhost:3000/auth/metamask',
+      `${import.meta.env.VITE_SERVER_API_URL}/auth/metamask`,
       { address }, { withCredentials: true }
     ).then(res =>{
       const new_token  = res.data;

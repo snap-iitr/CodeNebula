@@ -26,12 +26,12 @@ const DashboardCards: React.FC =  () => {
   const [balance2, setBalance2] = useState<string>("Loading...");
   const [UserGames, setUserGames] = useState<Match[]>();
   const [UserID, setUserID] = useState<number>();
-  const [TotalGames, setTotalGames] = useState<number>();
-  const [WinRate, setWinRate] = useState<string>();
-  const [EthWon, setEthWon] = useState<number>();
-  const [EthLost, setEthLost] = useState<number>();
-  const [LastGameResult, setLastGameResult] = useState<string>();
-  const [LastGameAmount, setLastGameAmount] = useState<string>();
+  const [TotalGames, setTotalGames] = useState<number>(0);
+  const [WinRate, setWinRate] = useState<string>("0");
+  const [EthWon, setEthWon] = useState<number>(0);
+  const [EthLost, setEthLost] = useState<number>(0);
+  const [LastGameResult, setLastGameResult] = useState<string>("---");
+  const [LastGameAmount, setLastGameAmount] = useState<string>("---");
 
 
 
@@ -56,7 +56,7 @@ const DashboardCards: React.FC =  () => {
 
     async function get_data() {
       axios.post<Match[]>(
-        'http://localhost:3000/data',
+        `${import.meta.env.VITE_SERVER_API_URL}/data`,
         {}, { withCredentials: true }
       ).then(res =>{
         const data = res.data;

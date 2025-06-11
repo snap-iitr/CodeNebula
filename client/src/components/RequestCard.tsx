@@ -20,7 +20,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onChange }) =>{
   const handleRequest = async (value : boolean) => {
     // Logic to accept the friend request
     await axios.post<string>(
-        'http://localhost:3000/request-friend',
+        `${import.meta.env.VITE_SERVER_API_URL}/request-friend`,
         { requestId: request.id , value },
         { withCredentials: true }
       ).then(res => {

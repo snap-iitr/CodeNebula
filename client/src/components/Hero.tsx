@@ -41,7 +41,7 @@ const Hero: React.FC = () => {
       await tx.wait(); // Wait for confirmation
 
       await axios.post<string>(
-        'http://localhost:3000/set-loading',
+        `${import.meta.env.VITE_SERVER_API_URL}/set-loading` ,
         { txHash: tx.hash },
         { withCredentials: true }
       ).then(res =>{

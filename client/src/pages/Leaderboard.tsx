@@ -28,7 +28,7 @@ const LeaderboardPage: React.FC = () => {
     setIsLoading(true)
     const timer = setTimeout(async () => {
       await axios.get<Player[]>(
-        'http://localhost:3000/leaderboard-data',
+        `${import.meta.env.VITE_SERVER_API_URL}/leaderboard-data`,
         { withCredentials: true }
       ).then(res =>{
         console.log(res.data);

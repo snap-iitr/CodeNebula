@@ -23,8 +23,6 @@ CSES_PASSWORD = os.getenv("CSES_PASSWORD")
 
 # Compiler API Key and code file path same as before
 COMPILER_RAPID_API = os.getenv("COMPILER_RAPID_API")
-CODE_PATH = os.getenv("CODE_PATH") # Absolute path
-HTML_PATH = os.getenv("HTML_PATH")
 
 load_dotenv()
 app = Flask(__name__)
