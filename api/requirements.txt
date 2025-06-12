@@ -5,3 +5,4 @@ flask-cors
 requests
 selenium
 webdriver_manager==4.0.0
+gunicorn>=20.0.0

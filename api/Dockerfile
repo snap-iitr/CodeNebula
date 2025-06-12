@@ -1,17 +1,40 @@
+# Stage 1: Build stage
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends build-essential && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies (including gunicorn)
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt gunicorn
+
+# Stage 2: Runtime stage
 FROM python:3.11-slim
 
-# Set working directory and copy app code
 WORKDIR /app
-RUN apt-get update && apt-get install -y \
-    chromium-driver \
-    && rm -rf /var/lib/apt/lists/*
-COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy Python dependencies
+COPY --from=builder /root/.local /root/.local
+# Ensure Python user-installed packages are in PATH
+ENV PATH=/root/.local/bin:$PATH
+
+# Copy application code
 COPY . .
 
-# Set environment and run Flask
+# Install runtime system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends chromium-driver && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Environment variables
 ENV FLASK_APP=app.py
-ENV FLASK_RUN_HOST=0.0.0.0
-CMD ["flask", "run", "--host=0.0.0.0", "--port=8000", "--reload"]
+ENV FLASK_ENV=production
+
+EXPOSE 8000
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "app:app"]

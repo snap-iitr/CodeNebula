@@ -124,6 +124,7 @@ def random_problem():
 @app.route('/run', methods=['POST'])
 def run():
     data = request.get_json()
+    print(data);
     language = data.get('languageCode', 17)  # default to 17 if not provided
     input_data = data.get('input', '')
     code = data.get('code', '')

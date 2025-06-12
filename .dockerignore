@@ -1,0 +1,10 @@
+.env
+Dockerfile
+docker-compose.yml
+*.log
+.npm
+.cache
+dist
+build
+.vscode
+*.md

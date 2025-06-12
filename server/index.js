@@ -140,6 +140,7 @@ io.on('connection', (socket) => {
 
   socket.on('run_code', async ({ languageCode, code, input }) => {
     try {
+      console.log("run code initialised");
       const res = await axios.post(process.env.PYTHON_API_URL + '/run', {
         languageCode,
         code,
