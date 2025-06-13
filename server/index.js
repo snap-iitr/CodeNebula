@@ -1,5 +1,5 @@
 const express = require('express');
-const { ethers, formatEther, id } = require("ethers");
+const { ethers, formatEther } = require("ethers");
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
@@ -8,7 +8,9 @@ const pool = require('./db');
 const cors = require('cors');
 const axios = require("axios");
 const PORT = process.env.PORT || 3000;
+const Groq = require('groq-sdk');
 require('./google')
+// require('dotenv').config();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
@@ -18,11 +20,14 @@ const SEPOLIA_ETHERSCAN_API = process.env.SEPOLIA_ETHERSCAN_API;
 const ADMIN_WALLET_ADDRESS = process.env.ADMIN_WALLET_ADDRESS; 
 const { Server } = require('socket.io');
 const http = require('http');
-const { stat } = require('fs');
 const server = http.createServer(app);
 const loadingUsers = new Set(); // loading_userId
 const connectedUsers = new Map(); // connected_userId
 const txHashes = new Set(); // txHash
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY, // Set your Groq API key in env
+});
 
 app.use(cors({
     origin: process.env.CLIENT_API_URL,
@@ -35,6 +40,51 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }));
+
+// Hint function
+async function getHintFromGroq(questionHtml, userInput) {
+  console.log("Hint start");
+  const chatCompletion = await groq.chat.completions.create({
+    messages: [
+      {
+        role: 'system',
+        content: `You are an assistant for a competitive coding game.
+            Your job is to provide only:
+            - explanations
+            - hints
+            - clarifications
+
+            You must NOT:
+            - give code
+            - give the correct answer
+            - suggest output values
+
+            Provide output only in text form in paragraph structure (one single paragraph, don't make points) using alphanumeric symbols`,
+      },
+      {
+        role: 'user',
+        content: `Question:\n${questionHtml}\n\nUser's Input:\n${userInput}`,
+      },
+    ],
+    model: 'mistral-saba-24b',
+    temperature: 0.6,
+    max_completion_tokens: 128,
+    top_p: 1,
+    stream: true,
+    stop: null,
+  });
+
+  let fullResponse = '';
+
+  for await (const chunk of chatCompletion) {
+    const text = chunk.choices[0]?.delta?.content || '';
+    process.stdout.write(text); // Optional: live streaming to terminal
+    fullResponse += text;
+  }
+  console.log(fullResponse);
+
+  return fullResponse;
+}
 
 // Initialize Socket.IO
 const io = new Server(server, {
@@ -136,6 +186,11 @@ io.on('connection', (socket) => {
     connectedUsers.delete(email);
     socket.join(roomID);
     console.log(`Socket ${socket.id} joined room ${roomID}`);
+  });
+
+  socket.on('get_hint', async ({ html, chatMessage }) => {
+    const hint = await getHintFromGroq(html, chatMessage);
+    io.to(socket.id).emit('hint_response',hint);
   });
 
   socket.on('run_code', async ({ languageCode, code, input }) => {
@@ -323,6 +378,7 @@ app.post('/set-loading', async (req, res) => {
         loadingUsers.add(decoded.email);
         txHashes.add(txHash);
       }
+      else return res.status(401).json({ status: 0, error: 'Invalid token' });
     });
     console.log("Loading users: ",loadingUsers);
     console.log("Transaction Hashes: ",txHashes);
@@ -652,13 +708,13 @@ app.get('/', async (req, res) => {
   console.log("Loading users: ",loadingUsers);
   console.log("Connected users: ",connectedUsers);
   console.log("Transaction Hashes: ",txHashes);
-  const [users] = await pool.query('SELECT * FROM users');
-  const [games] = await pool.query('SELECT * FROM games');
-  const [friends] = await pool.query('SELECT * FROM friends');
-  console.log(users);
-  console.log(games);
-  console.log(friends);
-  res.send('Hello from Express!');
+  // const [users] = await pool.query('SELECT * FROM users');
+  // const [games] = await pool.query('SELECT * FROM games');
+  // const [friends] = await pool.query('SELECT * FROM friends');
+  // console.log(users);
+  // console.log(games);
+  // console.log(friends);
+  res.send("Go Away! It's a top secret place");
 });
 
 server.listen(PORT, () => {
