@@ -20,7 +20,9 @@ const RecentMatches: React.FC<{ UserID: string }> = ({ UserID }) => {
     async function get_data() {
       axios.post<Match[]>(
         `${import.meta.env.VITE_SERVER_API_URL}/data`,
-        { UserID }, { withCredentials: true }
+        { UserID }, { headers: {
+          Authorization: localStorage.getItem('token')
+        }}
       ).then(res =>{
         setmatches(res.data);
       })

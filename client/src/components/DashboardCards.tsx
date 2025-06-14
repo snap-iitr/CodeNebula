@@ -3,7 +3,6 @@ import DashboardCard from "./DashboardCard"
 import { jwtDecode } from 'jwt-decode';
 import { ethers } from 'ethers';
 import axios from 'axios';
-import { getCookie } from '../utils/Cookies';
 import { Wallet, Gamepad2Icon as GameController2, TrendingUp, Trophy , X} from "lucide-react"
 
 export interface JwtPayload {
@@ -38,7 +37,7 @@ const DashboardCards: React.FC =  () => {
   useEffect(() => {
     async function fetchBalance() {
       try {
-        const token = getCookie("jwt");
+        const token = localStorage.getItem('token');
         if (!token) return;
 
         const decoded: JwtPayload = jwtDecode(token);
@@ -57,7 +56,9 @@ const DashboardCards: React.FC =  () => {
     async function get_data() {
       axios.post<Match[]>(
         `${import.meta.env.VITE_SERVER_API_URL}/data`,
-        {}, { withCredentials: true }
+        {}, { headers: {
+          Authorization: localStorage.getItem('token')
+        }}
       ).then(res =>{
         const data = res.data;
         setUserID(data[data.length-1].id);

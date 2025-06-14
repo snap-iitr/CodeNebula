@@ -52,7 +52,9 @@ const Profile: React.FC = () => {
         async function get_player_data() {
         axios.post<Player>(
             `${import.meta.env.VITE_SERVER_API_URL}/player-data`,
-            { UserId }, { withCredentials: true }
+            { UserId }, { headers: {
+          Authorization: localStorage.getItem('token')
+        }}
         ).then(res =>{
             const data = res.data;
             setUsername(data.username);
@@ -63,7 +65,9 @@ const Profile: React.FC = () => {
         async function get_data() {
         axios.post<Match[]>(
             `${import.meta.env.VITE_SERVER_API_URL}/player-matches-data`,
-            { UserId }, { withCredentials: true }
+            { UserId }, { headers: {
+          Authorization: localStorage.getItem('token')
+        }}
         ).then(res =>{
             const data = res.data;
             setUserGames(data);

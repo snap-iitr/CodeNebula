@@ -1,7 +1,6 @@
 import type React from "react"
 import { Link } from "react-router";
 import { jwtDecode } from 'jwt-decode';
-import { getCookie } from '../utils/Cookies';
 import { Zap, Users, User, Trophy } from "lucide-react"
 
 interface JwtPayload {
@@ -12,7 +11,7 @@ interface JwtPayload {
 }
 
 const QuickActions: React.FC = () => {
-  const token = getCookie('jwt');
+  const token = localStorage.getItem('token');
   if (!token) return null;
   const decoded: JwtPayload = jwtDecode(token);
   const Id = decoded.id;

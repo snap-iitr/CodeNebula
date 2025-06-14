@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { BrowserProvider, parseEther } from 'ethers';
 import { jwtDecode } from 'jwt-decode';
-import { getCookie } from '../utils/Cookies';
 import { Link } from "react-router";
 import { Zap, Users, Trophy } from "lucide-react"
 
@@ -16,7 +15,7 @@ interface JwtPayload {
 
 const Hero: React.FC = () => {
   const navigate = useNavigate();
-  const token = getCookie('jwt');
+  const token = localStorage.getItem('token');
   if (!token) return null;
   const decoded: JwtPayload = jwtDecode(token);
   const username = decoded.username;
@@ -43,7 +42,9 @@ const Hero: React.FC = () => {
       await axios.post<string>(
         `${import.meta.env.VITE_SERVER_API_URL}/set-loading` ,
         { txHash: tx.hash },
-        { withCredentials: true }
+        { headers: {
+          Authorization: localStorage.getItem('token')
+        }}
       ).then(res =>{
         console.log("Gaming session started:", res.data);
         navigate('/loading');

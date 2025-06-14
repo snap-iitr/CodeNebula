@@ -1,7 +1,5 @@
 const express = require('express');
 const { ethers, formatEther } = require("ethers");
-const session = require('express-session');
-const cookieParser = require('cookie-parser');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const pool = require('./db');
@@ -10,10 +8,9 @@ const axios = require("axios");
 const PORT = process.env.PORT || 3000;
 const Groq = require('groq-sdk');
 require('./google')
-// require('dotenv').config();
+require('dotenv').config();
 const app = express();
 app.use(express.json());
-app.use(cookieParser());
 
 const SEPOLIA_API_URL = "https://api-sepolia.etherscan.io/api";
 const SEPOLIA_ETHERSCAN_API = process.env.SEPOLIA_ETHERSCAN_API; 
@@ -26,19 +23,11 @@ const connectedUsers = new Map(); // connected_userId
 const txHashes = new Set(); // txHash
 
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY, // Set your Groq API key in env
+  apiKey: process.env.GROQ_API_KEY // Set your Groq API key in env
 });
 
 app.use(cors({
-    origin: process.env.CLIENT_API_URL,
-    credentials: true
-}));
-
-// Configure session middleware
-app.use(session({
-    secret: process.env.JWT_SECRET,
-    resave: false,
-    saveUninitialized: true
+    origin: process.env.CLIENT_API_URL
 }));
 
 // Hint function
@@ -251,15 +240,14 @@ io.on('connection', (socket) => {
 
 // Initialize Passport.js
 app.use(passport.initialize());
-app.use(passport.session());
 // Route to start the authentication process
 app.get('/auth/google',
-    passport.authenticate('google', { scope: ['profile', 'email'] })
+    passport.authenticate('google', { scope: ['profile', 'email'], session: false })
 );
 
 // Callback route after Google authentication
 app.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/' }),
+    passport.authenticate('google', { failureRedirect: '/', session: false }),
     (req, res) => {
         // Generate JWT payload - you can customize this
         const payload = {
@@ -277,7 +265,8 @@ app.get('/auth/google/callback',
 
 app.post('/verify-token', (req,res) => { // type-1 is basic, type-2 is loading, type-3 is gaming
   const { type } = req.body;
-  const token = req.cookies.jwt;
+  const token = req.headers.authorization;
+  console.log(token);
   if (!token) {
     return res.status(400).json({ status: 0, error: 'No token provided' });
   }
@@ -302,7 +291,7 @@ app.post('/verify-token', (req,res) => { // type-1 is basic, type-2 is loading, 
 
 app.post('/profile-verify', (req,res) => { // type-1 is basic, type-2 is loading, type-3 is gaming
   const { UserId } = req.body;
-  const token = req.cookies.jwt;
+  const token = req.headers.authorization;
   if (!token || !UserId) return res.json({status: 0});
 
   jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
@@ -325,7 +314,7 @@ app.post('/profile-verify', (req,res) => { // type-1 is basic, type-2 is loading
 
 app.post('/auth/metamask', async (req, res) => {
   const { address } = req.body;
-  const token = req.cookies.jwt;
+  const token = req.headers.authorization;
 
   jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) {
@@ -350,7 +339,7 @@ app.post('/auth/metamask', async (req, res) => {
 app.post('/set-loading', async (req, res) => {
   const { txHash } = req.body;
   console.log(txHash);
-  const token = req.cookies.jwt;
+  const token = req.headers.authorization;
   if (!txHash || txHashes.has(txHash)) return res.status(400).json({ error: 'Provide all things!!' });
   
   try{
@@ -390,7 +379,7 @@ app.post('/set-loading', async (req, res) => {
 
 app.post('/data', async (req, res) => {
   let UserID = req.body.UserID;
-  const token = req.cookies.jwt;
+  const token = req.headers.authorization;
   let userdata;
   jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) {
@@ -435,7 +424,7 @@ app.post('/data', async (req, res) => {
 
 app.get('/get-friends', async (req, res) => {
   let userdata;
-  const token = req.cookies.jwt;
+  const token = req.headers.authorization;
   if (!token) return res.status(400).json({ status: 0, error: 'No token provided' });
   jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) {
@@ -491,7 +480,7 @@ app.get('/get-friends', async (req, res) => {
 app.post('/search-friends', async (req, res) => {
   let userdata;
   const { searchQuery } = req.body;
-  const token = req.cookies.jwt;
+  const token = req.headers.authorization;
   if (!token) return res.status(400).json({ status: 0, error: 'No token provided' });
   jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) {
@@ -530,7 +519,7 @@ app.post('/search-friends', async (req, res) => {
 app.post('/request-friend', async (req, res) => {
   let userdata;
   const { requestId , value } = req.body;
-  const token = req.cookies.jwt;
+  const token = req.headers.authorization;
   if (!token) return res.status(400).json({ status: 0, error: 'No token provided' });
   jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) {
@@ -557,7 +546,7 @@ app.post('/request-friend', async (req, res) => {
 app.post('/add-friend', async (req, res) => {
   let userdata;
   const { FriendId } = req.body;
-  const token = req.cookies.jwt;
+  const token = req.headers.authorization;
   if (!token) return res.status(400).json({ status: 0, error: 'No token provided' });
   jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) {
@@ -587,7 +576,7 @@ app.post('/add-friend', async (req, res) => {
 
 app.post('/player-data', async (req, res) => {
   let UserID = req.body.UserId;
-  const token = req.cookies.jwt;
+  const token = req.headers.authorization;
   let userdata;
   if(!token) return res.status(400).json({ status: 0, error: 'No token provided' });
   if(!UserID) return res.status(400).json({ status: 0, error: 'No UserID provided' });
@@ -616,7 +605,7 @@ app.post('/player-data', async (req, res) => {
 
 app.post('/player-matches-data', async (req, res) => {
   let UserID = req.body.UserId;
-  const token = req.cookies.jwt;
+  const token = req.headers.authorization;
   if(!token) return res.status(400).json({ status: 0, error: 'No token provided' });
   if(!UserID) return res.status(400).json({ status: 0, error: 'No UserID provided' });
   jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
@@ -642,7 +631,7 @@ app.post('/player-matches-data', async (req, res) => {
 });
 
 app.get('/leaderboard-data', async (req, res) => {
-  const token = req.cookies.jwt;
+  const token = req.headers.authorization;
   if(!token) return res.status(400).json({ status: 0, error: 'No token provided' });
   jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err || !decoded || !decoded.id || !decoded.username || !decoded.email || !decoded.wallet_address) {

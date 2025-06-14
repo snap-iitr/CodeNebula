@@ -22,7 +22,9 @@ const SearchFriendCard: React.FC<SearchFriendCardProps> = ({ result , onChange }
     await axios.post<string>(
         `${import.meta.env.VITE_SERVER_API_URL}/add-friend`,
         { FriendId: result.id },
-        { withCredentials: true }
+        { headers: {
+          Authorization: localStorage.getItem('token')
+        }}
       ).then(res => {
         // Handle successful response
         console.log("Friend added successfully:", res.data);

@@ -35,16 +35,3 @@ async (req, accessToken, refreshToken, profile, done) => {
     return done(err, null);
   }
 }));
-
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-  try {
-    const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
-    done(null, rows[0]);
-  } catch (err) {
-    done(err, null);
-  }
-});

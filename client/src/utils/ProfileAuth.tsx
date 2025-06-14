@@ -20,7 +20,9 @@ const ProfileAuth: React.FC<AuthWrapperProps> = ({ children }) => {
 
   useEffect(() => {
 
-    axios.post<VerifyTokenResponse>('http://localhost:3000/profile-verify', { UserId }, { withCredentials: true })
+    axios.post<VerifyTokenResponse>(`${import.meta.env.VITE_SERVER_API_URL}/profile-verify`, { UserId }, { headers: {
+          Authorization: localStorage.getItem('token')
+        }})
       .then(res => {
         const { status } = res.data;
         if(status) setIsVerified(true);

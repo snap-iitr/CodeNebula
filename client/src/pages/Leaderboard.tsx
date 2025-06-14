@@ -29,7 +29,9 @@ const LeaderboardPage: React.FC = () => {
     const timer = setTimeout(async () => {
       await axios.get<Player[]>(
         `${import.meta.env.VITE_SERVER_API_URL}/leaderboard-data`,
-        { withCredentials: true }
+        { headers: {
+          Authorization: localStorage.getItem('token')
+        }}
       ).then(res =>{
         console.log(res.data);
         setPlayers(res.data);

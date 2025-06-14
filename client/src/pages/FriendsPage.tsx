@@ -50,7 +50,9 @@ const FriendsPage: React.FC = () => {
 
       await axios.get<{Friends : Friend[]; FriendsRequests : FriendRequest[]}>(
         `${import.meta.env.VITE_SERVER_API_URL}/get-friends`,
-        { withCredentials: true }
+        { headers: {
+          Authorization: localStorage.getItem('token')
+        }}
       ).then(res => {
         // Handle successful response
         setFriends(res.data.Friends);
@@ -72,7 +74,9 @@ const FriendsPage: React.FC = () => {
         await axios.post<SearchResult[]>(
           `${import.meta.env.VITE_SERVER_API_URL}/search-friends`,
           { searchQuery },
-          { withCredentials: true }
+          { headers: {
+          Authorization: localStorage.getItem('token')
+        }}
         ).then(res => {
           // Handle successful response
           setSearchResults(res.data);

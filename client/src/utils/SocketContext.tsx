@@ -22,7 +22,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const connectSocket = useCallback(() => {
     if (!socket) {
       console.log("Connecting to socket...");
-      const newSocket = io('http://localhost:3000', {
+      const newSocket = io(import.meta.env.VITE_SERVER_API_URL, {
         withCredentials: true,
         transports: ['websocket'],
       });

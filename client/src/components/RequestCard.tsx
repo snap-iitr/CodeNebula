@@ -22,7 +22,9 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onChange }) =>{
     await axios.post<string>(
         `${import.meta.env.VITE_SERVER_API_URL}/request-friend`,
         { requestId: request.id , value },
-        { withCredentials: true }
+        { headers: {
+          Authorization: localStorage.getItem('token')
+        }}
       ).then(res => {
         // Handle successful response
         onChange();

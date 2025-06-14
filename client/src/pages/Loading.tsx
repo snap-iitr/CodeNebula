@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 // import { socket } from './socket';
 import { useSocket } from '../utils/SocketContext';
-import { getCookie } from '../utils/Cookies';
 import { X, Zap, Shield, Clock } from "lucide-react"
 
 export interface JwtPayload {
@@ -17,7 +16,7 @@ export interface JwtPayload {
 }
 
 const Loading: React.FC = () => {
-  const token = getCookie('jwt');
+  const token = localStorage.getItem('token');
   if (!token) return null;
   const decoded: JwtPayload = jwtDecode(token);
   const Id = decoded.id;

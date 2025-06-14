@@ -2,11 +2,11 @@ const mysql = require('mysql2');
 require('dotenv').config();
 
 const pool = mysql.createPool({
-  host: 'mysql',       // Since MySQL is on your machine
-  port: process.env.DB_PORT || 3306,
-  user: 'nebula',
-  password: process.env.DATABASE_PASSWORD,
-  database: 'nebula_project',
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   waitForConnections: true
 });
 

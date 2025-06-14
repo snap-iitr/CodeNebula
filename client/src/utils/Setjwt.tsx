@@ -8,11 +8,10 @@ const SetJWT: React.FC = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
     if (token) {
-      document.cookie = `jwt=${token}`;
-      // Remove token param from URL (optional)
+      localStorage.setItem('token', token);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-    navigate('/home');
+    navigate('/connect-more');
   }, [navigate]);
 
   return null; // No UI needed, redirects immediately

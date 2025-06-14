@@ -40,17 +40,20 @@ const handleMetaMaskConnect = async () => {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     const address = accounts[0];
     
-    axios.post<string>(
+    await axios.post<string>(
       `${import.meta.env.VITE_SERVER_API_URL}/auth/metamask`,
-      { address }, { withCredentials: true }
-    ).then(res =>{
-      const new_token  = res.data;
-      document.cookie = `jwt=${new_token}`;
+      { address }, { headers: {
+          Authorization: localStorage.getItem('token')
+        }}
+    )
+    .then((res) =>{
+      const token = res.data;
+      localStorage.setItem('token', token);
       console.log('Connected account:', address);
       navigate('/home');
     })
     .catch(() => {
-        navigate('/');
+      navigate('/');
     })
 
   } catch (error) {

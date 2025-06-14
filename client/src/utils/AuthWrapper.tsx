@@ -20,7 +20,9 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children,type }) => {
 
   useEffect(() => {
 
-    axios.post<VerifyTokenResponse>('http://localhost:3000/verify-token', { type }, { withCredentials: true })
+    axios.post<VerifyTokenResponse>(`${import.meta.env.VITE_SERVER_API_URL}/verify-token`, { type }, { headers: {
+          Authorization: localStorage.getItem('token')
+        }})
       .then(res => {
         const { status } = res.data;
         console.log(type,status);

@@ -5,7 +5,7 @@ const SetJWT: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.cookie = `jwt=`;
+    localStorage.setItem('token', 'Login First!');
     navigate('/');
   }, [navigate]);
 

@@ -3,7 +3,6 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { jwtDecode } from 'jwt-decode';
-import { getCookie } from '../utils/Cookies';
 import { Link } from "react-router";
 import { Menu, X, LogOut, User } from "lucide-react"
 
@@ -15,7 +14,7 @@ interface JwtPayload {
 }
 
 const Navbar: React.FC<{PageName : string}> = ({PageName}) => {
-  const token = getCookie('jwt');
+  const token = localStorage.getItem('token');
   if (!token) return null;
   const decoded: JwtPayload = jwtDecode(token);
   const Id = decoded.id;
@@ -23,6 +22,10 @@ const Navbar: React.FC<{PageName : string}> = ({PageName}) => {
   const username = decoded.username;
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  useEffect(() =>{
+    console.log("Navbar Loading");
+  },[]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

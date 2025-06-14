@@ -32,7 +32,9 @@ const HowItWorks: React.FC = () => {
       await axios.post<string>(
         `${import.meta.env.VITE_SERVER_API_URL}/set-loading`,
         { txHash: tx.hash },
-        { withCredentials: true }
+        { headers: {
+          Authorization: localStorage.getItem('token')
+        }}
       ).then(res =>{
         console.log("Gaming session started:", res.data);
         navigate('/loading');
