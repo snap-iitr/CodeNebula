@@ -20,6 +20,7 @@ const http = require('http');
 const server = http.createServer(app);
 const loadingUsers = new Set(); // loading_userId
 const connectedUsers = new Map(); // connected_userId
+const roomIDs = new Set(); // Ongoing Game RoomIDs
 const txHashes = new Set(); // txHash
 
 const groq = new Groq({
@@ -112,10 +113,12 @@ io.on('connection', (socket) => {
 
   function timer(roomID, wallet_address, opponentWalletAddress){
     setTimeout(() => {
-      io.to(roomID).emit('game_tied');
-      Transaction(wallet_address.toString(),"0.0009");
-      Transaction(opponentWalletAddress.toString(),"0.0009");
-      console.log(`⏱ Game in ${roomID} tied (time up)`);
+      if(roomIDs.has(roomID)){
+        io.to(roomID).emit('game_tied');
+        Transaction(wallet_address.toString(),"0.0009");
+        Transaction(opponentWalletAddress.toString(),"0.0009");
+        console.log(`⏱ Game in ${roomID} tied (time up)`);
+      }
     }, (15 * 60 * 1000) + 3000);
   }
 
@@ -138,7 +141,7 @@ io.on('connection', (socket) => {
       waitingPlayer = null;
 
       // Fetch a CP question from external API
-      const res = await axios.get(process.env.PYTHON_API_URL + '/random_problem');
+      const res = await axios.get(`${process.env.PYTHON_API_URL}/random_problem`);
       
       loadingUsers.delete(email);
       loadingUsers.delete(opponentEmail);
@@ -150,7 +153,7 @@ io.on('connection', (socket) => {
         html: res.data.html,
         opponent: opponentUsername,
         opponentWalletAddress: opponentWalletAddress,
-        problemID: res.id
+        problemID: res.data.id
       });
 
       io.to(opponentSocket.id).emit('game_start', {
@@ -158,9 +161,10 @@ io.on('connection', (socket) => {
         html: res.data.html,
         opponent: username,
         opponentWalletAddress: walletAddress,
-        problemID: res.id
+        problemID: res.data.id
       });
 
+      roomIDs.add(roomID);
       timer(roomID,walletAddress,opponentWalletAddress);
 
       console.log(`Game started in ${roomID}`);
@@ -198,6 +202,7 @@ io.on('connection', (socket) => {
 
 
   socket.on('submit_code', async ({ roomID, selectedLanguage, problemID, code, languageExtension, WalletAddress, OpponentWalletAddress, Id }) => {
+    roomIDs.delete(roomID);
     const [result] = await pool.query('SELECT * FROM games where id = ?',[roomID]);
     console.log(result[0]);
     const game = result[0];
@@ -266,7 +271,6 @@ app.get('/auth/google/callback',
 app.post('/verify-token', (req,res) => { // type-1 is basic, type-2 is loading, type-3 is gaming
   const { type } = req.body;
   const token = req.headers.authorization;
-  console.log(token);
   if (!token) {
     return res.status(400).json({ status: 0, error: 'No token provided' });
   }
@@ -693,10 +697,12 @@ app.get('/leaderboard-data', async (req, res) => {
 });
 
 
-app.get('/', async (req, res) => {
+app.get('/test', async (req, res) => {
   console.log("Loading users: ",loadingUsers);
   console.log("Connected users: ",connectedUsers);
   console.log("Transaction Hashes: ",txHashes);
+  const x = await axios.get(`${process.env.PYTHON_API_URL}/random_problem`);
+  console.log(x.data);
   // const [users] = await pool.query('SELECT * FROM users');
   // const [games] = await pool.query('SELECT * FROM games');
   // const [friends] = await pool.query('SELECT * FROM friends');
